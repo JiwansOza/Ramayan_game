@@ -24,6 +24,17 @@
         "/private/tmp/claude-501/-Users-jiwansoza--claude-spares-spare-iGWxDO/5fe9e753-7f50-4381-ac6f-540448324ffe/scratchpad/viewer"
       ],
       "port": 8766
+    },
+    {
+      "name": "anim-lab",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "/Users/jiwansoza/ramayan/prototype/tools/anim-lab/labserver.py",
+        "/Users/jiwansoza/ramayan/prototype",
+        "/Users/jiwansoza/ramayan/prototype",
+        "8767"
+      ],
+      "port": 8767
     }
   ]
 }

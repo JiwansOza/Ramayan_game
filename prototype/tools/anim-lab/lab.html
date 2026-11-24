@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><title>anim lab</title>
+<!-- Retargets the Mixamo clips onto the Hanuman rig and bakes them into hanuman-anims.json.
+     Run the "anim-lab" launch config, open /tools/anim-lab/lab.html, then call runBake() in the console;
+     the server writes the result next to the game. ?f=<fbx path> previews another clip. -->
+<style>html,body{margin:0;height:100%;background:#1a1533}canvas{display:block;width:100%;height:100%}</style>
+<canvas id="c"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="../../hanuman-rig.js"></script>
+<script src="retarget.js"></script>
+<script src="bake.js"></script>
+<script>
+const cv = document.getElementById('c');
+const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.outputEncoding = THREE.sRGBEncoding;
+const s = new THREE.Scene(); s.background = new THREE.Color('#202040');
+const cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+s.add(new THREE.HemisphereLight('#ffffff', '#555555', 1.0)); const d = new THREE.DirectionalLight('#ffffff', 0.8); d.position.set(2, 3, 3); s.add(d);
+const ground = new THREE.Mesh(new THREE.BoxGeometry(6, 0.004, 6), new THREE.MeshBasicMaterial({ color: '#3a7a3a' })); s.add(ground);
+r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix();
+let rig, mixObj, mixer, act, clip;
+const v3 = () => new THREE.Vector3();
+new THREE.GLTFLoader().load('../../hanuman.glb', (g) => {
+  let src; g.scene.traverse((o) => { if (o.isMesh && !src) src = o; }); g.scene.updateMatrixWorld(true);
+  const geo = src.geometry.clone(); geo.applyMatrix4(src.matrixWorld);
+  src.material.side = THREE.DoubleSide;
+  rig = HANUMAN_RIG.build(THREE, geo, src.material); s.add(rig.mesh);
+  new THREE.FBXLoader().load(new URLSearchParams(location.search).get('f') || '../../assets/animations/mixamo/Start%20Walking.fbx', (o) => {
+    mixObj = o; clip = o.animations[0]; mixer = new THREE.AnimationMixer(o); act = mixer.clipAction(clip); act.play(); window.loaded = true;
+  }, undefined, (e) => { window.err = String(e); });
+}, undefined, (e) => { window.err = String(e); });
+const mxPos = (n) => mixObj.getObjectByName(RETARGET.MX(n)).getWorldPosition(v3());
+window.sampleAt = (t) => { act.time = t; mixer.update(0); mixObj.updateMatrixWorld(true); return RETARGET.pose(THREE, HANUMAN_RIG.J, mxPos); };
+window.apply = (loc) => { for (const n of rig.names) rig.bones[n].quaternion.identity(); for (const b in loc) rig.bones[b].quaternion.copy(loc[b]); };
+window.lowY = () => { rig.mesh.updateMatrixWorld(true); rig.mesh.skeleton.update(); const p = rig.mesh.geometry.attributes.position, v = v3(); let m = 9; for (let i = 0; i < p.count; i += 5) { v.fromBufferAttribute(p, i); rig.mesh.boneTransform(i, v); if (v.y < m) m = v.y; } return m; };
+window.view = (a, ty = 0) => { const m = lowY(); ground.position.y = m - 0.002; cam.position.set(Math.sin(a) * 3.8, 0.1, Math.cos(a) * 3.8); cam.lookAt(0, ty, 0); r.render(s, cam); return cv.toDataURL('image/jpeg', 0.8); };
+window.sheet = (shots) => { document.body.innerHTML = '<div style="display:flex;flex-wrap:wrap;height:100%">' + shots.map((x) => '<img src="' + x + '" style="width:25%;height:50%;object-fit:cover">').join('') + '</div>'; };
+</script>

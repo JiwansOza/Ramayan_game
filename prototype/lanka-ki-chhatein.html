@@ -597,6 +597,23 @@
       }).catch(fail);
     });
   }
+  // Mixamo clips retargeted onto the rig (hanuman-anims.json, baked by tools/anim-lab): one local quaternion per bone
+  // per frame. Without them Hanuman falls back to the hand-made poses below.
+  let anims = null;
+  function loadAnims() {
+    return fetch('hanuman-anims.json').then((r) => (r.ok ? r.json() : null)).then((j) => {
+      if (!j) return;
+      const clips = {};
+      for (const k in j.clips) {
+        const c = j.clips[k], s = atob(c.q), u = new Uint8Array(s.length);
+        for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+        const raw = new Int16Array(u.buffer), q = new Float32Array(raw.length);
+        for (let i = 0; i < raw.length; i++) q[i] = raw[i] / 32767;
+        clips[k] = Object.assign({}, c, { q });
+      }
+      anims = { fps: j.fps, bones: j.bones, clips };
+    }).catch((e) => console.warn('animations not loaded', e));
+  }
 
   // ---------- rakshasa guards ----------
   const RANGE = 10.5, HALF = 0.58;
@@ -675,7 +692,7 @@
   }
   function doThrow() {
     if (fruits <= 0) { say('Phal khatam. Aage ek tokri mein aur milenge.', 2.5); return; }
-    fruits--; thrown++; throwAnim = 0.35;
+    fruits--; thrown++; throwAnim = throwDur();
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), fruitMat); m.castShadow = true;
     m.position.copy(player).add(new THREE.Vector3(0, 1.1, 0)); scene.add(m);
     projectiles.push({ m, v: throwVel(new THREE.Vector3()), landed: false, life: 6 });
@@ -1034,6 +1051,82 @@
   // (a negative x turn swings a limb forward; a positive x turn bends a knee back)
   const target = {}, _fp = new THREE.Vector3();
   function animateRig(t, dt, spd) {
+    if (anims) animateClips(t, dt, spd); else animateProcedural(t, dt, spd);
+    groundFeet(dt);
+  }
+  // the throw clip (seconds into the baked clip): wind-up from 0.15 s, release at 0.45 s, follow-through to 0.95 s;
+  // the fruit leaves the hand the moment the throw starts, so the clip starts just short of the release
+  const TH0 = 0.3, TH1 = 0.95;
+  const throwDur = () => (anims ? (TH1 - TH0) * 0.75 : 0.35);
+  // the clip pose, sampled from the baked frames with a slerp between neighbours
+  const qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qe = new THREE.Quaternion(), _eu = new THREE.Euler();
+  const pose = () => { const o = {}; for (const n of rig.names) o[n] = new THREE.Quaternion(); return o; };
+  let P = null;
+  function sample(clip, f, loop, out) {
+    const n = clip.n, nb = anims.bones.length;
+    if (loop) f = ((f % n) + n) % n; else f = Math.max(0, Math.min(n - 1, f));
+    const i0 = Math.floor(f), i1 = loop ? (i0 + 1) % n : Math.min(n - 1, i0 + 1), w = f - i0, q = clip.q;
+    anims.bones.forEach((b, k) => {
+      const a = (i0 * nb + k) * 4, c = (i1 * nb + k) * 4;
+      qa.set(q[a], q[a + 1], q[a + 2], q[a + 3]).normalize(); qb.set(q[c], q[c + 1], q[c + 2], q[c + 3]).normalize();
+      out[b].copy(qa).slerp(qb, w);
+    });
+    return out;
+  }
+  const blend = (a, b, w, bones) => { for (const n of bones || anims.bones) a[n].slerp(b[n], w); };
+  let walkPhase = 0, landT = 0, wasGround = true;
+  function animateClips(t, dt, spd) {
+    const B = rig.bones, C = anims.clips, fps = anims.fps;
+    if (!P) P = { a: pose(), b: pose(), c: pose(), tgt: pose() };
+    const tgt = P.tgt;
+    for (const n of rig.names) tgt[n].identity();
+    if (wasGround !== onGround) { if (onGround) landT = 0.28; wasGround = onGround; }
+    const walk = Math.min(1, spd / 3), run = Math.min(1, Math.max(0, (spd - 3) / 2.2));
+    // locomotion: the step cycle is driven by distance covered, one stride (two steps) per loop, so the feet don't slide
+    const stride = C.walk.stride + (C.run.stride - C.walk.stride) * run;
+    if (onGround) walkPhase = (walkPhase + dt * spd / stride) % 1;
+    sample(C.idle, 0, false, tgt);
+    if (onGround && walk > 0.02) {
+      sample(C.walk, walkPhase * C.walk.n, true, P.a);
+      if (run > 0) { sample(C.run, walkPhase * C.run.n, true, P.b); blend(P.a, P.b, run); }
+      blend(tgt, P.a, walk);
+    }
+    // in the air: the jump clip from take-off to the apex while rising, then on to the landing while falling
+    if (!onGround) {
+      const J = C.jump, up = Math.max(0, Math.min(1, 1 - vel.y / 7.6)), down = Math.max(0, Math.min(1, -vel.y / 7.6));
+      const s = vel.y > 0 ? J.takeoff + (J.apex - J.takeoff) * up : J.apex + (J.land - J.apex) * down;
+      sample(J, s * fps, false, tgt);
+    } else if (landT > 0) {
+      // touching down: the jump's landing, fading back into the walk
+      const J = C.jump, k = 1 - landT / 0.28;
+      sample(J, (J.land + k * 0.25) * fps, false, P.a); blend(tgt, P.a, Math.min(1, landT / 0.12));
+      landT = Math.max(0, landT - dt);
+    }
+    // aiming and throwing take over the upper body (the throw was mirrored to his free left hand)
+    const UPPER = ['spine', 'chest', 'neck', 'head', 'upperArmL', 'foreArmL'];
+    if (throwAnim > 0) {
+      const p = 1 - throwAnim / throwDur();
+      sample(C.throw, (TH0 + (TH1 - TH0) * p) * fps, false, P.a);
+      blend(tgt, P.a, Math.min(1, throwAnim / 0.12), UPPER);
+      throwAnim = Math.max(0, throwAnim - dt);
+    } else if (aiming) {
+      sample(C.throw, (C.throw.aim - C.throw.start) * fps, false, P.a); blend(tgt, P.a, 1, UPPER);
+    }
+    // hiding in a bush: the hand-made crouch
+    if (hidden) {
+      // (the same crouch as the hand-made poses, with a third of the standing stance folded in)
+      const crouch = { thighR: [-1.07, 0, 0], shinR: [1.98, 0, 0], footR: [-1.26, 0, 0], thighL: [-1.0, 0, 0], shinL: [1.7, 0, 0], footL: [-0.99, 0, 0], spine: [0.42, 0, 0], head: [-0.35, 0, 0], upperArmR: [-0.3, 0, 0], upperArmL: [-0.3, 0, 0] };
+      for (const n in crouch) tgt[n].setFromEuler(_eu.set(crouch[n][0], crouch[n][1], crouch[n][2]));
+    }
+    // always alive: breathing, a slow look around when standing, and the tail swaying (the clips have no tail)
+    const still = onGround ? 1 - walk : 0;
+    tgt.chest.multiply(qe.setFromEuler(_eu.set(Math.sin(t * 2.2) * 0.025, 0, 0)));
+    tgt.head.multiply(qe.setFromEuler(_eu.set(0, Math.sin(t * 0.45) * 0.18 * still * (aiming ? 0 : 1), 0)));
+    for (let i = 0; i <= 6; i++) tgt['tail' + i].setFromEuler(_eu.set(Math.sin(t * 1.3 - i * 0.6) * 0.05 + (onGround ? 0 : 0.08), 0, Math.sin(t * 2.0 - i * 0.7) * (0.05 + 0.07 * run)));
+    const ease = Math.min(1, dt * (throwAnim > 0 ? 30 : onGround ? 18 : 12));
+    for (const n of rig.names) B[n].quaternion.slerp(tgt[n], ease);
+  }
+  function animateProcedural(t, dt, spd) {
     const B = rig.bones, T = target;
     for (const n of rig.names) T[n] = [0, 0, 0];
     const walk = onGround ? Math.min(1, spd / 3) : 0, run = onGround ? Math.min(1, Math.max(0, (spd - 3) / 2.2)) : 0;
@@ -1077,7 +1170,10 @@
     // ease every bone towards its pose (snappier in the air and when throwing)
     const ease = Math.min(1, dt * (throwAnim > 0 ? 22 : onGround ? 13 : 9));
     for (const n of rig.names) { const r = B[n].rotation, v = T[n]; r.x += (v[0] - r.x) * ease; r.y += (v[1] - r.y) * ease; r.z += (v[2] - r.z) * ease; }
-    // keep the feet on the ground: measure the lowest sole and move the whole body so it rests on the floor
+  }
+  // keep the feet on the ground: measure the lowest sole and move the whole body so it rests on the floor
+  function groundFeet(dt) {
+    const B = rig.bones;
     rig.holder.position.y = rig.baseY;
     if (onGround) {
       hero.updateMatrixWorld(true);
@@ -1107,7 +1203,7 @@
   resetAll();
   camera.position.set(-6.5, 7, -1.5);
   requestAnimationFrame(loop);
-  Promise.all([loadHanuman(), loadStone()]).then(([ok]) => {
+  Promise.all([loadHanuman(), loadStone(), loadAnims()]).then(([ok]) => {
     if (!ok) console.log('Hanuman ka model nahi aaya; saada roop chalega.');
     setScreen('start'); $('begin').focus({ preventScroll: true });
   });
