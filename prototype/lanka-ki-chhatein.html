@@ -33,21 +33,37 @@
   #sub { left: 50%; transform: translateX(-50%); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); max-width: min(640px, 86vw); text-align: center; font-size: 18px; line-height: 1.4;
          padding: 8px 16px; background: rgba(14, 11, 30, 0.55); border-radius: 4px; opacity: 0; transition: opacity 0.4s; }
   #sub.on { opacity: 1; }
-  #keys { right: calc(16px + env(safe-area-inset-right, 0px)); top: calc(74px + env(safe-area-inset-top, 0px)); font-size: 12px; color: var(--moon-dim); line-height: 1.75; text-align: right; opacity: 0.8; }
-  @media (max-width: 1400px) { #wrap:not(.touch) #sub { max-width: min(560px, 46vw); } }
+  @media (max-width: 1200px) { #wrap:not(.touch) #sub { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); } }
   kbd { display: inline-block; min-width: 14px; padding: 0 5px; margin-left: 3px; border: 1px solid var(--line); border-radius: 3px; font: 500 11.5px/1.5 var(--body); color: var(--gold); text-align: center; background: rgba(14, 11, 30, 0.5); }
   #banner { left: 0; right: 0; top: 38%; text-align: center; display: none; }
   #wrap.caught #banner { display: block; }
   #banner .big { font: 400 clamp(40px, 7vw, 72px)/1 var(--display); color: var(--danger); }
   #banner .small { margin-top: 8px; font-size: 16px; color: var(--moon); }
   #wrap.caught #c { filter: saturate(0.5) brightness(0.7); }
-  #vitals { left: calc(14px + env(safe-area-inset-left, 0px)); top: calc(80px + env(safe-area-inset-top, 0px)); width: 220px; }
-  #vitals .hpLbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--moon-dim); }
-  #vitals .form b { color: var(--gold); font-weight: 500; }
-  .hpBar { height: 9px; margin-top: 3px; border: 1px solid var(--line); border-radius: 5px; background: rgba(14, 11, 30, 0.6); overflow: hidden; }
-  #hpFill { height: 100%; width: 100%; background: linear-gradient(90deg, #e47a2e, #e9c46a); transition: width 0.15s; }
+  /* bottom-left: objective, emblem, health and stamina */
+  #vitals { left: calc(20px + env(safe-area-inset-left, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: 340px; }
+  #vitals .obj { display: flex; align-items: center; gap: 8px; margin: 0 0 8px 6px; font-size: 15.5px; color: var(--moon); }
+  #vitals .dia { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); flex: none; box-shadow: 0 0 6px rgba(233,196,106,0.8); }
+  .vrow { display: flex; align-items: center; gap: 4px; }
+  .emblem { width: 62px; height: 62px; flex: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+  .bars { flex: 1; display: grid; gap: 5px; }
+  .bar { position: relative; height: 11px; border: 1px solid rgba(233, 196, 106, 0.55); border-radius: 1px; background: rgba(14, 11, 30, 0.55); clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+  .bar.st { height: 6px; margin-right: 14%; }
+  .bar > div { position: absolute; inset: 0; width: 100%; transition: width 0.15s; }
+  #hpFill { background: linear-gradient(90deg, #d8641e, #f0a23a 70%, #ffd27a); }
   #hpFill.low { background: linear-gradient(90deg, #a8201a, #ef5a3c); }
-  #prompt { left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); font-size: 17px; padding: 8px 14px; background: rgba(14, 11, 30, 0.6); border: 1px solid var(--line); border-radius: 4px; opacity: 0; transition: opacity 0.3s; }
+  #stFill { background: linear-gradient(90deg, #3a6ad8, #8ab8ff); }
+  .brow { display: flex; align-items: center; gap: 8px; } .brow .bar { flex: 1; }
+  .brow span { width: 30px; font-size: 13px; line-height: 1; color: var(--moon); font-variant-numeric: tabular-nums; } .brow span.sm { font-size: 11px; color: var(--moon-dim); }
+  /* bottom-right: the form and the keys */
+  #abil { right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: flex-end; gap: 14px; }
+  .formIcon { text-align: center; } .formIcon svg { width: 54px; height: 54px; display: block; margin: 0 auto; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+  .formName { font-size: 12px; color: var(--moon-dim); margin-top: 2px; }
+  .klist { display: grid; gap: 3px; font-size: 12.5px; color: var(--moon-dim); padding-left: 12px; border-left: 1px solid rgba(233, 196, 106, 0.3); }
+  .klist kbd { min-width: 30px; margin: 0 8px 0 0; }
+  #wrap.touch #abil .klist { display: none; } #wrap.touch #vitals { bottom: auto; top: calc(80px + env(safe-area-inset-top, 0px)); width: 260px; }
+  #prompt { left: 50%; transform: translateX(-50%); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); font-size: 17px; padding: 8px 16px 8px 10px; background: rgba(14, 11, 30, 0.55); border: 1px solid var(--line); border-radius: 22px; opacity: 0; transition: opacity 0.3s; }
+  #prompt kbd { margin: 0 8px 0 0; font-size: 13px; padding: 1px 7px; }
   #prompt.on { opacity: 1; }
   #hurt { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(170, 20, 10, 0.75) 100%); }
   .ehb { position: absolute; left: 0; top: 0; z-index: 2; width: 60px; height: 6px; border: 1px solid rgba(0,0,0,0.6); border-radius: 3px; background: rgba(14, 11, 30, 0.7); pointer-events: none; display: none; overflow: hidden; }
@@ -75,13 +91,19 @@
   #bHeavy { right: calc(98px + env(safe-area-inset-right, 0px)); bottom: calc(158px + env(safe-area-inset-bottom, 0px)); }
   #bForm { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
   #sub { bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
-  #wrap:not(.touch) #sub { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+  #wrap:not(.touch) #sub { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   #wrap.touch #prompt { bottom: calc(240px + env(safe-area-inset-bottom, 0px)); }
 
   /* screens */
   #screen { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: rgba(10, 8, 24, 0.78);
             padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); overflow-y: auto; }
   #wrap.playing #screen, #wrap.caught #screen { display: none; }
+  #screen.start, #screen.loading { justify-content: flex-start; padding-left: max(6vw, 20px); background: linear-gradient(90deg, rgba(12, 8, 26, 0.88) 0%, rgba(12, 8, 26, 0.62) 38%, rgba(12, 8, 26, 0.05) 70%, rgba(12, 8, 26, 0) 100%); }
+  #screen.start .card, #screen.loading .card { width: min(500px, 100%); }
+  #screen.start h1, #screen.loading h1 { font-size: clamp(44px, 6vw, 76px); }
+  .keyline { color: var(--moon-dim); font-size: 13.5px; }
+  h1 { text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
+  .rule { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; color: var(--gold); } .rule::before, .rule::after { content: ''; height: 1px; width: 70px; background: linear-gradient(90deg, transparent, var(--gold)); } .rule::after { background: linear-gradient(90deg, var(--gold), transparent); } .rule i { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); }
   .card { width: min(620px, 100%); }
   .eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
   h1 { margin: 6px 0 0; font: 400 clamp(42px, 8vw, 72px)/1 var(--display); color: var(--moon); text-wrap: balance; }
@@ -102,11 +124,11 @@
   .stats3 div { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; color: var(--moon-dim); }
   .stats3 b { display: block; font: 400 28px/1.2 var(--display); color: var(--moon); font-variant-numeric: tabular-nums; }
   [data-on] { display: none; }
-  #screen.start [data-on~="start"], #screen.paused [data-on~="paused"], #screen.won [data-on~="won"], #screen.loading [data-on~="loading"] { display: block; }
+  #screen.start [data-on~="start"], #screen.paused .tips[data-on~="paused"], #screen.paused [data-on~="paused"], #screen.won [data-on~="won"], #screen.loading [data-on~="loading"] { display: block; }
   #screen.start .row[data-on~="start"], #screen.paused .row[data-on~="paused"], #screen.won .row[data-on~="won"],
   #screen.start .ctrl[data-on~="start"], #screen.paused .ctrl[data-on~="paused"] { display: flex; }
   #screen .ctrl[data-on] { display: none; }
-  #screen.start .ctrl.keys, #screen.paused .ctrl.keys { display: grid; }
+  #screen.paused .ctrl.keys { display: grid; }
   #wrap.touch #screen .ctrl.keys { display: none !important; }
   #screen .tips.thumbs { display: none; }
   #wrap.touch #screen.start .tips.thumbs, #wrap.touch #screen.paused .tips.thumbs { display: grid; }
@@ -130,16 +152,34 @@
       </svg>
       <div class="lbl"><b id="susText">Shaant</b><span id="lightText">Parchhai mein</span></div>
     </div>
-    <div class="hud" id="zone"><div class="name">Lanka · Bazaar ki chhatein</div><div class="goal" id="goalText">Ashok Vatika tak pahuncho</div></div>
+    <div class="hud" id="zone"><div class="name" id="zoneName">Lanka · Bazaar ki chhatein</div></div>
     <div class="hud" id="stats">Phal <b id="fruitN">5</b> &nbsp; Deep <b id="deepN">1/3</b> &nbsp; Parajit <b id="killN">0</b><br><span id="timeN">0:00</span></div>
-    <div class="hud" id="vitals"><div class="hpLbl">Bal <span class="form">Roop: <b id="formN">Mushti</b> <kbd>Q</kbd></span></div><div class="hpBar"><div id="hpFill"></div></div></div>
-    <div class="hud" id="prompt"><kbd>E</kbd> Sita Mata ko Rama ki mudrika do</div>
-    <div class="hud" id="sub"></div>
-    <div class="hud" id="keys">
-      <div>Chalo <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Daudo <kbd>Shift</kbd> &nbsp; Kudo <kbd>Space</kbd> &nbsp; Jhuko <kbd>C</kbd></div>
-      <div>Vaar <kbd>Click</kbd> &nbsp; Bhaari vaar <kbd>E</kbd> &nbsp; Lot-pot <kbd>R</kbd> &nbsp; Gada <kbd>Q</kbd></div>
-      <div>Phal phenko: <kbd>Right click</kbd> ya <kbd>F</kbd> daba kar chhodo &nbsp; Ruko <kbd>P</kbd></div>
+    <div class="hud" id="vitals">
+      <div class="obj"><span class="dia"></span><span id="goalText">Ashok Vatika ki or badho</span></div>
+      <div class="vrow">
+        <svg class="emblem" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6d27a"/><stop offset="1" stop-color="#b8862e"/></linearGradient></defs>
+          <path d="M32 3 L61 32 L32 61 L3 32 Z" fill="rgba(20,12,24,0.72)" stroke="url(#eg)" stroke-width="2.5"/>
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="none" stroke="rgba(246,210,122,0.35)" stroke-width="1"/>
+          <g fill="url(#eg)"><circle cx="38" cy="24" r="7.5"/><rect x="21" y="27" width="4" height="22" rx="2" transform="rotate(-38 23 38)"/><circle cx="38" cy="24" r="2.4" fill="#5a3a12"/></g>
+        </svg>
+        <div class="bars">
+          <div class="brow"><div class="bar hp"><div id="hpFill"></div></div><span id="hpN">100</span></div>
+          <div class="brow"><div class="bar st"><div id="stFill"></div></div><span id="stN" class="sm">100</span></div>
+        </div>
+      </div>
     </div>
+    <div class="hud" id="abil">
+      <div class="formIcon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 2 L46 24 L24 46 L2 24 Z" fill="rgba(20,12,24,0.72)" stroke="#e9c46a" stroke-width="2"/>
+        <g id="icoGada" fill="#e9c46a"><circle cx="28" cy="18" r="6"/><rect x="14" y="21" width="3.4" height="17" rx="1.7" transform="rotate(-38 16 30)"/></g>
+        <g id="icoFist" fill="#e9c46a" style="display:none"><rect x="15" y="17" width="18" height="13" rx="4"/><rect x="17" y="29" width="13" height="8" rx="2"/></g></svg>
+        <div class="formName" id="formN">Mushti</div></div>
+      <div class="klist">
+        <div><kbd>LMB</kbd>Vaar</div><div><kbd>E</kbd>Bhaari vaar</div><div><kbd>R</kbd>Lot-pot</div><div><kbd>Q</kbd>Gada / mushti</div><div><kbd>F</kbd>Phal phenko</div><div><kbd>C</kbd>Jhuko</div>
+      </div>
+    </div>
+    <div class="hud" id="prompt"><kbd>E</kbd> Mudrika do</div>
+    <div class="hud" id="sub"></div>
     <div class="hud" id="banner"><div class="big">Pakde gaye!</div><div class="small">Rakshason ne gira diya. Aakhri deep se dobara…</div></div>
   </div>
 
@@ -155,14 +195,15 @@
 
   <div id="screen" class="loading">
     <div class="card">
-      <div class="eyebrow" data-on="loading start">Ashok Vatika · Zone 2 prototype</div>
+      <div class="eyebrow" data-on="loading start">Sundar Kand · Lanka mein sandhya</div>
       <div class="eyebrow" data-on="paused">Ruke hue</div>
       <div class="eyebrow" data-on="won">Zone poora</div>
       <h1 id="title">Lanka ki Chhatein</h1>
-      <p class="lede" data-on="loading start">Raat ki Lanka. Chhote roop mein Hanuman ko chhatton aur galiyon ke raaste, rakshason se bachte ya unse ladte hue, Ashok Vatika mein Sita Mata tak Rama ki mudrika pahunchani hai.</p>
+      <div class="rule" data-on="loading start" aria-hidden="true"><i></i></div>
+      <p class="lede" data-on="loading start">Lanka mein sandhya. Chhote roop mein Hanuman ko chhatton aur galiyon ke raaste, rakshason se bachte ya unse ladte hue, Ashok Vatika mein Sita Mata tak Rama ki mudrika pahunchani hai.</p>
       <p class="lede" data-on="won">Ashok ke ped ke neeche Sita Mata ne Rama ki mudrika pehchaan li. Ye prototype yahin tak hai.</p>
       <p class="note" data-on="loading">Hanuman, rakshas aur Lanka aa rahe hain… (lagbhag 17 MB)</p>
-      <div class="ctrl keys" data-on="start paused">
+      <div class="ctrl keys" data-on="paused">
         <div><span>Chalo</span><span>W A S D</span></div>
         <div><span>Dekho</span><span>Mouse</span></div>
         <div><span>Daudo (shor hota hai)</span><span>Shift</span></div>
@@ -175,12 +216,12 @@
         <div><span>Phal phenko</span><span>Right click / F daba kar chhodo</span></div>
         <div><span>Ruko</span><span>P / Esc</span></div>
       </div>
-      <ul class="tips thumbs" data-on="start paused">
+      <ul class="tips thumbs" data-on="paused">
         <li><b>Baayaan gola</b> chalaata hai; poora dhakelo to daudoge.</li>
         <li><b>Kahin aur ungli ghumao</b> to camera ghoomta hai.</li>
         <li><b>Phenko</b> daba kar rakho, nishaana dekho, chhodo.</li>
       </ul>
-      <ul class="tips" data-on="start">
+      <ul class="tips" data-on="paused">
         <li><b>Mashaal ki roshni</b> mein pehredaar jaldi dekhte hain. <b>Parchhai</b> tumhari dost hai.</li>
         <li><b>Jhaadiyon</b> mein chhup jaao to koi nahi dekh sakta.</li>
         <li>Phal jahan girega, wahan ki <b>awaaz</b> sun kar pehredaar dekhne jaayenge.</li>
@@ -193,6 +234,7 @@
         <div><b id="wCaught">0</b>Baar pakde gaye</div>
         <div><b id="wThrown">0</b>Rakshas parajit</div>
       </div>
+      <p class="note keyline" data-on="start">WASD chalo · Shift daudo · Space kudo · Click vaar · E bhaari vaar · R lot-pot · Q gada · F phal · P ruko</p>
       <div class="row" data-on="start"><button class="btn main" id="begin">Shuru karo</button></div>
       <p class="note" data-on="start won">Animation: Quaternius Universal Animation Library (CC0). Rakshas: Quaternius base (CC0). Props: Kenney (CC0). Awaaz: Kenney, Meta Open Sound, alvana-audio/HoliznaCC0 (CC0). Patthar: Poly Haven (CC0).</p>
       <div class="row" data-on="paused"><button class="btn main" id="resume">Aage khelo</button><button class="btn" id="soundBtn">Awaaz: on</button><button class="btn" id="restart">Shuru se</button></div>
@@ -205,11 +247,20 @@
 <script src="vendor/GLTFLoader.js"></script>
 <script src="vendor/SkeletonUtils.js"></script>
 <script src="vendor/RoomEnvironment.js"></script>
+<script src="vendor/post/CopyShader.js"></script>
+<script src="vendor/post/LuminosityHighPassShader.js"></script>
+<script src="vendor/post/EffectComposer.js"></script>
+<script src="vendor/post/MaskPass.js"></script>
+<script src="vendor/post/RenderPass.js"></script>
+<script src="vendor/post/ShaderPass.js"></script>
+<script src="vendor/post/UnrealBloomPass.js"></script>
 <script src="lanka-world.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/fx.js"></script>
 <script src="js/actors.js"></script>
 <script src="js/scenery.js"></script>
+<script src="js/grass.js"></script>
+<script src="js/look.js"></script>
 <script>
 (function () {
   'use strict';
@@ -232,13 +283,14 @@
   catch (e) { $('title').textContent = 'WebGL nahi chala'; document.querySelector('[data-on="loading"].note').textContent = 'Is browser mein 3D graphics band hain. Koi naya Chrome, Safari ya Firefox try karo.'; return; }
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#120f2a');
-  scene.fog = new THREE.FogExp2('#161236', 0.02);
+  scene.background = new THREE.Color('#d9a6a4');
+  // sundown haze: everything far away fades into warm lavender
+  scene.fog = new THREE.FogExp2('#c99aa6', 0.0075);
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 600);
 
   const budget = isTouch ? 1.0e6 : 2.6e6;
@@ -247,6 +299,7 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Math.sqrt(budget / (w * h))));
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    if (window.LankaLook) window.LankaLook.resize(w, h);
   }
   window.addEventListener('resize', resize);
   resize();
@@ -428,9 +481,9 @@
   solid(9, 12.5, 62, 63, 0, 2.6, boxMats(M.wallA));
 
   // ground: street, garden
-  const street = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), M.street);
+  const street = new THREE.Mesh(new THREE.PlaneGeometry(96, 176), M.street);
   street.rotation.x = -Math.PI / 2; street.receiveShadow = true;
-  street.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * 60; });
+  street.position.z = 45; street.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? 44 : 24); });
   scene.add(street);
   const garden = new THREE.Mesh(new THREE.PlaneGeometry(24, 22), M.grass);
   garden.rotation.x = -Math.PI / 2; garden.position.set(0, 0.02, 74); garden.receiveShadow = true;
@@ -474,27 +527,29 @@
     scene.add(g);
   })();
 
-  // sky: moon and stars
-  const moonDir = new THREE.Vector3(-0.35, 0.42, 1).normalize();
-  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#fff3d6', fog: false, depthWrite: false }));
-  moon.scale.set(60, 60, 1); moon.position.copy(moonDir).multiplyScalar(400); scene.add(moon);
-  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#7d86d8', fog: false, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
-  moonHalo.scale.set(220, 220, 1); moonHalo.position.copy(moon.position); scene.add(moonHalo);
+  // sky: the sun going down behind the golden palace (the old names say moon; it is the sun now)
+  const moonDir = new THREE.Vector3(-0.3, 0.2, 1).normalize();
+  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#fff0c8', fog: false, depthWrite: false }));
+  moon.scale.set(70, 70, 1); moon.position.copy(moonDir).multiplyScalar(400); scene.add(moon);
+  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#ffa860', fog: false, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+  moonHalo.scale.set(360, 260, 1); moonHalo.position.copy(moon.position); scene.add(moonHalo);
   (function stars() {
-    const n = 900, pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { const a = rand() * Math.PI * 2, e = 0.08 + rand() * 1.3, r = 450; pos[i * 3] = Math.cos(a) * Math.cos(e) * r; pos[i * 3 + 1] = Math.sin(e) * r; pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; }
+    const n = 260, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const a = Math.PI + (rand() - 0.5) * 2.4, e = 0.5 + rand() * 1.0, r = 450; pos[i * 3] = Math.cos(a) * Math.cos(e) * r; pos[i * 3 + 1] = Math.sin(e) * r; pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: '#e8e2ff', size: 1.6, sizeAttenuation: false, fog: false })));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: '#e8e2ff', size: 1.4, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.5 })));
   })();
 
   // lights
-  scene.add(new THREE.HemisphereLight('#4a4c9a', '#1a1020', 0.62));
-  const moonLight = new THREE.DirectionalLight('#a9b6ff', 0.62);
+  scene.add(new THREE.HemisphereLight('#b8a8ff', '#6a4632', 0.95));
+  const moonLight = new THREE.DirectionalLight('#ffb27a', 2.3);
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(isTouch ? 1024 : 2048, isTouch ? 1024 : 2048);
   Object.assign(moonLight.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 140 });
-  moonLight.shadow.bias = -0.0006;
+  moonLight.shadow.bias = -0.0006; moonLight.shadow.normalBias = 0.02;
   scene.add(moonLight, moonLight.target);
+  // a soft fill from behind the camera so faces and armour read against the sunset
+  const fill = new THREE.DirectionalLight('#9a8ad8', 0.55); fill.position.set(0.3, 0.6, -1); scene.add(fill);
   const POOL = isTouch ? 3 : 6, pool = [];
   for (let i = 0; i < POOL; i++) { const l = new THREE.PointLight('#ff9a3c', 0, 10, 2); scene.add(l); pool.push(l); }
 
@@ -599,17 +654,29 @@
   // a night sky to reflect: dark indigo dome, a pale moon, warm torch glows low around the horizon
   try {
     const es = new THREE.Scene(), sg = new THREE.SphereGeometry(50, 32, 16), cols = [];
-    const lo = new THREE.Color('#06050f'), hi = new THREE.Color('#2a2a5c'), tmp = new THREE.Color();
-    for (let i = 0; i < sg.attributes.position.count; i++) { const y = sg.attributes.position.getY(i) / 50; tmp.copy(lo).lerp(hi, Math.max(0, Math.min(1, y * 0.8 + 0.35))); cols.push(tmp.r, tmp.g, tmp.b); }
+    const lo = new THREE.Color('#3a2a3a'), mid = new THREE.Color('#e8a88a'), hi = new THREE.Color('#6a64b8'), tmp = new THREE.Color();
+    for (let i = 0; i < sg.attributes.position.count; i++) { const y = sg.attributes.position.getY(i) / 50; if (y < 0.05) tmp.copy(lo).lerp(mid, Math.max(0, (y + 0.4) / 0.45)); else tmp.copy(mid).lerp(hi, Math.min(1, (y - 0.05) / 0.6)); cols.push(tmp.r, tmp.g, tmp.b); }
     sg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
     es.add(new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
     const blob = (c, x, y, z, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), new THREE.MeshBasicMaterial({ color: c })); m.position.set(x, y, z); es.add(m); };
-    blob('#fff3d6', -14, 18, 40, 3.2);
+    blob('#fff0c0', -14, 10, 46, 7);
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; blob('#ff8a3a', Math.cos(a) * 40, rr(-2, 6), Math.sin(a) * 40, 1.6); }
     env = new THREE.PMREMGenerator(renderer).fromScene(es, 0.02).texture;
   } catch (e) { env = null; }
   const A = window.LankaAudio, FX = window.LankaFX, ACT = window.LankaActors, SCN = window.LankaScenery;
   FX.init(THREE, scene, camera); FX.resize(wrap.clientHeight);
+  const LOOK = window.LankaLook;
+  LOOK.init(THREE, renderer, scene, camera, { sunDir: moonDir, env, w: wrap.clientWidth, h: wrap.clientHeight, light: isTouch });
+  // lush grass through Ashok Vatika and in tufts along the lanes
+  function buildGrass() {
+    const inPond = (x, z) => Math.hypot(x - 3, z - 75) < 3.7 || Math.hypot(x + 5.5, z - 76.5) < 2.4 || (Math.abs(x) < 1.0 && z < 71) || Math.hypot(x + 2.5, z - 72) < 1.1;
+    window.LankaGrass.build(THREE, scene, SCN.wind, [
+      { x0: -11.4, x1: 11.4, z0: 63.6, z1: 83.8, y: 0, n: isTouch ? 9000 : 26000, h: 0.36, skip: inPond },
+      { x0: -2.95, x1: -2.4, z0: 0, z1: 62, y: 0, n: 1400, h: 0.35, skip: (x, z) => (z > 2 && z < 4) || (z > 19 && z < 22) },
+      { x0: 2.4, x1: 2.95, z0: 0, z1: 62, y: 0, n: 1400, h: 0.35 },
+      { x0: -14, x1: 14, z0: 84.5, z1: 100, y: 0, n: isTouch ? 3000 : 8000, h: 0.7 },
+    ], rand);
+  }
   addEventListener('resize', () => FX.resize(wrap.clientHeight));
   ACT.init(THREE);
 
@@ -733,14 +800,14 @@
   let fruits = 5, thrown = 0, caughtN = 0, playTime = 0, state = 'loading', caughtT = 0, aiming = false, runNoiseT = 0, hidden = false, exposure = 0;
   let gotBasket = false, kills = 0;
   let hp = 100, maxHp = 100, form = 'mushti', crouch = false, airJumps = 0, act = null, combo = 0, comboT = 0, attackQueued = false, iframes = 0, hurtFlash = 0, sinceCombat = 99, regenT = 0;
-  let hitStop = 0, shakeT = 0, shakeA = 0, stepD = 0, flipping = false, bigFall = 0;
+  let hitStop = 0, shakeT = 0, shakeA = 0, stepD = 0, flipping = false, bigFall = 0, stamina = 100, stamT = 0;
   const keys = {}, stick = { x: 0, y: 0, on: false };
   let jumpQueued = false;
   const weather = { rain: 0, target: 0, wet: 0, next: 70, thunderT: 8 };
   const rainForced = /[?&]rain/.test(location.search);
 
   const lines = [
-    { z: -99, t: 'Raat ho chuki hai. Chhote roop mein Hanuman Lanka ki chhatton par utarte hain.', d: 5 },
+    { z: -99, t: 'Suraj samudra mein doob raha hai. Chhote roop mein Hanuman Lanka ki chhatton par utarte hain.', d: 5 },
     { z: 4.5, t: 'Mashaal ki roshni se bacho. C dabao to jhuk kar chupke chaloge.', d: 5 },
     { z: 12, t: 'Chhatton ke beech kudo; hawa mein dobara Space dabao to lambi chhalaang. Deewar ke kinaare kudo to chadh jaoge.', d: 6 },
     { z: 22, t: 'Aage ek rakshas chhat par ghoom raha hai. Peeche se vaar karo to ek hi vaar kaafi hai.', d: 5.5 },
@@ -959,6 +1026,8 @@
     if (state !== 'play') return;
     if (nearSita()) { meetSita(); return; }
     if (!canAct() || !onGround) return;
+    if (stamina < 18) return;
+    stamina -= 18; stamT = 0.8;
     doAttack(form === 'gada' ? ATK.slam : ATK.hook);
   }
   function airAttack() { // a quick downward swipe in the air
@@ -1000,6 +1069,8 @@
     if (act && act.name === 'atk' && act.t < act.data.hitT) return;
     const ix = moveDir.x, iz = moveDir.z;
     if (Math.hypot(ix, iz) > 0.2) heroYaw = Math.atan2(ix, iz);
+    if (stamina < 20) { say('Saans phool gayi: thoda ruko.', 1.2); return; }
+    stamina -= 20; stamT = 0.8;
     iframes = 0.55; crouch = false;
     startAction('roll', { clip: 'roll', speed: 1.45, cancelAt: 0.8, move: 5.2 });
     A.play('cloth', { vol: 0.6 });
@@ -1010,6 +1081,7 @@
     if (H) H.gada.visible = form === 'gada';
     FX.magic(player, form === 'gada' ? '#ffd27a' : '#a8d8ff'); A.play('magic', { vol: 0.55 });
     $('formN').textContent = form === 'gada' ? 'Gada' : 'Mushti';
+    $('icoGada').style.display = form === 'gada' ? '' : 'none'; $('icoFist').style.display = form === 'gada' ? 'none' : '';
   }
 
   // ---------- combat: the rakshasas ----------
@@ -1216,9 +1288,12 @@
     let run = !!(keys.ShiftLeft || keys.ShiftRight);
     if (stick.on !== false && (stick.x || stick.y)) { ix = stick.x; iz = stick.y; const sm = Math.hypot(ix, iz); run = sm > 0.92; }
     mag = Math.min(1, Math.hypot(ix, iz));
+    if (run && stamina <= 1) run = false;
     if (run && mag > 0.1) crouch = false;
     _f.set(Math.sin(yaw), 0, Math.cos(yaw)); _r.set(-Math.cos(yaw), 0, Math.sin(yaw));
     _m.set(0, 0, 0).addScaledVector(_f, iz).addScaledVector(_r, ix); moveDir.copy(_m);
+    if (run && mag > 0.1 && onGround) { stamina = Math.max(0, stamina - dt * 13); stamT = 0.8; }
+    if ((stamT -= dt) <= 0) stamina = Math.min(100, stamina + dt * 28);
     iframes = Math.max(0, iframes - dt); comboT -= dt; sinceCombat += dt; hurtFlash = Math.max(0, hurtFlash - dt * 1.6);
 
     // timed actions
@@ -1377,13 +1452,16 @@
   }
 
   // ---------- weather: clear spells and rain, with lightning ----------
+  const _rainFog = new THREE.Color('#6e7090');
   function updateWeather(dt) {
     if (rainForced) weather.target = 1;
     else if ((weather.next -= dt) <= 0) { const raining = weather.target > 0.1; weather.target = raining ? 0 : 0.55 + rand() * 0.45; weather.next = raining ? rr(80, 130) : rr(45, 80); }
     weather.rain += (weather.target - weather.rain) * Math.min(1, dt * 0.08);
     weather.wet += ((weather.rain > 0.15 ? 1 : 0) - weather.wet) * Math.min(1, dt * (weather.rain > 0.15 ? 0.05 : 0.012));
     if (weather.rain > 0.55 && (weather.thunderT -= dt) <= 0) { weather.thunderT = rr(7, 18); FX.lightning(); A.play('thunder', { vol: 0.9, delay: rr(0.4, 1.8), vary: 0.2 }); }
-    scene.fog.density = 0.02 + weather.rain * 0.014;
+    scene.fog.density = 0.0075 + weather.rain * 0.018;
+    scene.fog.color.set('#c99aa6').lerp(_rainFog, weather.rain * 0.85); scene.background.copy(scene.fog.color);
+    moonLight.intensity = 2.3 * (1 - weather.rain * 0.7) * (1 + (FX.flashing ? 1.5 : 0));
     const rough = 0.95 - weather.wet * 0.5;
     [M.street, M.roof].forEach((m) => { m.roughness = rough; m.envMapIntensity = weather.wet * 0.9; if (env && !m.envMap) { m.envMap = env; m.needsUpdate = true; } });
     A.setLoop('rain', weather.rain * 0.85); A.setLoop('crickets', 0.35 * (1 - weather.rain));
@@ -1400,11 +1478,13 @@
     const fighting = guards.some((g) => HOSTILE[g.state]);
     $('susText').textContent = fighting ? 'Yuddh!' : sus > 66 ? 'Khatra!' : sus > 33 ? 'Shak' : sus > 2 ? 'Halki nazar' : 'Shaant';
     $('lightText').textContent = hidden ? 'Jhaadi mein chhupe' : crouch ? (exposure > 0.35 ? 'Jhuke, roshni mein' : 'Jhuke, parchhai mein') : exposure > 0.6 ? 'Tez roshni mein' : exposure > 0.35 ? 'Halki roshni' : 'Parchhai mein';
-    hpFill.style.width = (hp / maxHp * 100).toFixed(1) + '%'; hpFill.classList.toggle('low', hp < 30);
+    hpFill.style.width = (hp / maxHp * 100).toFixed(1) + '%'; hpFill.classList.toggle('low', hp < 30); $('hpN').textContent = Math.ceil(hp);
+    $('stFill').style.width = stamina.toFixed(1) + '%'; $('stN').textContent = Math.round(stamina);
     hurtEl.style.opacity = (hurtFlash * 0.8 + (hp < 30 ? 0.25 + Math.sin(clock * 5) * 0.1 : 0)).toFixed(2);
     $('fruitN').textContent = fruits; $('deepN').textContent = deeps.filter((d) => d.lit).length + '/3'; $('timeN').textContent = fmt(playTime); $('killN').textContent = kills;
-    const dist = Math.round(Math.hypot(player.x - SITA.x, player.z - SITA.z));
-    $('goalText').textContent = 'Sita Mata ' + dist + ' m';
+    const dist = Math.round(Math.hypot(player.x - SITA.x, player.z - SITA.z)), lit = deeps.filter((d) => d.lit).length;
+    $('goalText').textContent = fighting ? 'Rakshason se niptao ya bhaag kar chhup jaao' : player.z > 63 ? 'Sita Mata ko Rama ki mudrika do (' + dist + ' m)' : player.z > 40 ? 'Ashok Vatika ka dwaar dhoondho (' + dist + ' m)' : 'Chhatton ke raaste aage badho · deep ' + lit + '/3';
+    $('zoneName').textContent = player.z > 63 ? 'Ashok Vatika' : 'Lanka · Bazaar ki chhatein';
     if (sayT > 0 && (sayT -= dt) <= 0) $('sub').classList.remove('on');
     // health bars over rakshasas in a fight
     const w = wrap.clientWidth, h = wrap.clientHeight;
@@ -1421,7 +1501,17 @@
 
   // ---------- camera, lights, animation ----------
   const camT = new THREE.Vector3(), camP = new THREE.Vector3(), camDir = new THREE.Vector3();
+  let cineA = 0;
   function frameCamera(dt) {
+    if (state === 'loading' || state === 'start' || state === 'won') {
+      // a slow hero shot over Hanuman's shoulder towards the sunset and the golden palace
+      cineA += dt * 0.05; heroYaw = -0.3;
+      const sx = Math.sin(cineA) * 0.4;
+      camera.position.set(player.x + 1.5 + sx, player.y + 1.55 + Math.sin(cineA * 0.7) * 0.15, player.z - 2.7);
+      camera.lookAt(player.x + 1.9 + sx * 0.5, player.y + 1.6, player.z + 6);
+      moonLight.position.set(player.x + moonDir.x * 60, moonDir.y * 60, player.z + moonDir.z * 60); moonLight.target.position.set(player.x, 0, player.z); moonLight.target.updateMatrixWorld();
+      return;
+    }
     const dist = (isTouch ? 4.6 : 4.2) + (guards.some((g) => HOSTILE[g.state]) ? 0.6 : 0), tgtH = crouch ? 0.9 : 1.15;
     camT.set(player.x, player.y + tgtH, player.z);
     camDir.set(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
@@ -1464,6 +1554,7 @@
     }
     FX.updateRain(dt, player, weather.rain, (x, z) => groundAt(x, z), 1.5 + weather.rain * 2);
     FX.update(dt, t);
+    LOOK.update(t, dt, player, Math.min(1, hurtFlash * 0.9 + (hp < 30 && state === 'play' ? 0.35 : 0)));
     // the hero
     hero.position.copy(player); hero.rotation.y = heroYaw;
     const spd = Math.hypot(vel.x, vel.z);
@@ -1504,13 +1595,13 @@
     requestAnimationFrame(loop);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     tick(dt);
-    renderer.render(scene, camera);
+    LOOK.render();
   }
   // test hook (only with ?test in the address): advance the game by hand when the tab is throttled
   if (testing) window.__game = {
     keys, get state() { return state; }, get player() { return player; }, get H() { return H; }, THREE, get sus() { return sus; }, set yaw(v) { yaw = v; }, set pitch(v) { pitch = v; }, jump() { jumpQueued = true; },
     get guards() { return guards; }, get hp() { return hp; }, set hp(v) { hp = v; }, get act() { return act; }, attack, heavy: heavyOrInteract, roll, toggleForm, get form() { return form; }, get weather() { return weather; }, camera, scene, set heroYaw(v) { heroYaw = v; },
-    step(n) { for (let i = 0; i < n; i++) tick(1 / 60); renderer.render(scene, camera); return { state, x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), sus: Math.round(sus), hp: Math.round(hp) }; },
+    step(n) { for (let i = 0; i < n; i++) tick(1 / 60); LOOK.render(); return { state, x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), sus: Math.round(sus), hp: Math.round(hp) }; },
     begin,
   };
   resetAll();
@@ -1521,7 +1612,7 @@
   Promise.all([
     prog(loadHanuman()),
     prog(Promise.all(GUARD_CFG.map(mkGuard))),
-    prog(ACT.loadProps().then((props) => { SC = SCN.build({ THREE, scene, props, solid, M, rand, rr, env, isTouch }); extraLights = SC.lights; }).catch((e) => console.warn('props', e))),
+    prog(ACT.loadProps().then((props) => { const sctx = { THREE, scene, props, solid, M, rand, rr, env, isTouch }; SC = SCN.build(sctx); extraLights = SC.lights; LOOK.world(sctx); buildGrass(); }).catch((e) => console.warn('props', e))),
     prog(loadStone()),
   ]).then(([ok]) => {
     if (!ok) console.log('Hanuman ka model nahi aaya; saada roop chalega.');

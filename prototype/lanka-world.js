@@ -270,21 +270,21 @@ window.LankaWorld = (function () {
   // ---------- the sky and the air ----------
   function sky(tx) {
     const geo = new T.SphereGeometry(470, 32, 16), cols = new Float32Array(geo.attributes.position.count * 3);
-    const hor = new T.Color('#3b2a5a'), mid = new T.Color('#161036'), zen = new T.Color('#04030d'), warm = new T.Color('#5a3550'), c = new T.Color();
+    const hor = new T.Color('#f79a7a'), mid = new T.Color('#a86ea8'), zen = new T.Color('#2c2a74'), warm = new T.Color('#ffc078'), c = new T.Color();
     const moon = C.moonDir;
     for (let i = 0; i < geo.attributes.position.count; i++) {
       const x = geo.attributes.position.getX(i), y = geo.attributes.position.getY(i), z = geo.attributes.position.getZ(i), t = Math.max(0, y / 470);
       if (t < 0.25) c.copy(hor).lerp(mid, t / 0.25); else c.copy(mid).lerp(zen, Math.min(1, (t - 0.25) / 0.6));
       const toMoon = Math.max(0, (x * moon.x + y * moon.y + z * moon.z) / 470);
-      c.lerp(warm, Math.pow(toMoon, 6) * 0.5 * (1 - t));
+      c.lerp(warm, Math.pow(toMoon, 4) * 0.85 * (1 - t * 0.6));
       cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
     }
     geo.setAttribute('color', new T.BufferAttribute(cols, 3));
     const dome = new T.Mesh(geo, new T.MeshBasicMaterial({ vertexColors: true, side: T.BackSide, fog: false, depthWrite: false }));
     dome.renderOrder = -10; C.scene.add(dome); C.skyDome = dome;
-    for (let i = 0; i < 9; i++) {
-      const s = new T.Sprite(new T.SpriteMaterial({ map: tx.cloud, color: '#8a86c8', transparent: true, opacity: 0.22 + C.rand() * 0.18, fog: false, depthWrite: false }));
-      const a = -0.9 + C.rand() * 1.4, e = 0.18 + C.rand() * 0.35, r = 380;
+    for (let i = 0; i < 18; i++) {
+      const s = new T.Sprite(new T.SpriteMaterial({ map: tx.cloud, color: C.rand() < 0.5 ? '#ffc2c4' : '#f6a6b8', transparent: true, opacity: 0.4 + C.rand() * 0.35, fog: false, depthWrite: false }));
+      const a = -1.6 + C.rand() * 2.8, e = 0.08 + C.rand() * 0.3, r = 380;
       s.position.set(Math.sin(a) * Math.cos(e) * r, Math.sin(e) * r, Math.cos(a) * Math.cos(e) * r);
       const sc = 90 + C.rand() * 110; s.scale.set(sc * 2, sc, 1); s.userData = { a, e, r, v: 0.004 + C.rand() * 0.006 };
       C.scene.add(s); live.clouds.push(s);

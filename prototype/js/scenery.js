@@ -77,7 +77,7 @@ window.LankaScenery = (function () {
   function water(geo, x, y, z, color = '#0d1a3a', rep = 2) {
     const nt = C.waterNormals || (C.waterNormals = waterNormals());
     const a = nt.clone(); a.needsUpdate = true; a.repeat.set(rep, rep);
-    const m = new T.MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.2, normalMap: a, normalScale: new T.Vector2(0.45, 0.45), envMap: C.env, envMapIntensity: 1.0, transparent: true, opacity: 0.94 });
+    const m = new T.MeshStandardMaterial({ color, roughness: 0.16, metalness: 0.1, normalMap: a, normalScale: new T.Vector2(0.45, 0.45), envMap: C.env, envMapIntensity: 0.4, transparent: true, opacity: 0.92 });
     const w = new T.Mesh(geo, m); w.rotation.x = -Math.PI / 2; w.position.set(x, y, z); w.receiveShadow = true; C.scene.add(w);
     waterMats.push({ m, a, rep }); return w;
   }
@@ -197,18 +197,16 @@ window.LankaScenery = (function () {
     }
     for (let z = 64.5; z < 83.5; z += rr(1.2, 2.2)) { bamboo.push([-11.1, 0, z, rr(2.2, 3), R() * 6]); bamboo.push([11.1, 0, z + 0.5, rr(2.2, 3), R() * 6]); }
     for (let x = -10.5; x < 10.5; x += rr(1.2, 2.2)) bamboo.push([x, 0, 83.9, rr(2.2, 3), R() * 6]);
-    scatter('grass_large', grass, { sway: 1.2, shadow: false }); scatter('grass_leafsLarge', grass2, { sway: 1.2, shadow: false });
     scatter('flower_redA', flowersR, { sway: 1, shadow: false }); scatter('flower_yellowA', flowersY, { sway: 1, shadow: false }); scatter('flower_purpleA', flowersP, { sway: 1, shadow: false });
     scatter('plant_bushDetailed', plants, { sway: 0.5 }); scatter('crops_bambooStageB', bamboo, { sway: 0.6 }); scatter('rock_smallA', rocks);
     // street-side greenery in the canyon too
     const sgrass = []; for (let z = 0; z < 62; z += rr(0.8, 2)) { const s = R() < 0.5 ? -1 : 1; sgrass.push([s * rr(2.6, 2.9), 0, z, rr(1.2, 2), R() * 6]); }
-    scatter('grass_leafs', sgrass, { sway: 1, shadow: false });
     // fountain with water, and the lotus pond
     place('fountain_round_detail', -5.5, 0, 76.5, 2.2, 0);
     C.solid(-7.7, -3.3, 74.3, 78.7, 0, 0.55, null, { invisible: true });
-    water(new T.CircleGeometry(1.95, 32), -5.5, 0.42, 76.5, '#122a52', 1);
+    water(new T.CircleGeometry(1.95, 32), -5.5, 0.42, 76.5, '#1a4a5a', 1);
     ponds.push({ x: -5.5, z: 76.5, r: 2, y: 0.42, fountain: true });
-    water(new T.CircleGeometry(3.4, 48), 3, 0.05, 75, '#0b1838', 2);
+    water(new T.CircleGeometry(3.4, 48), 3, 0.05, 75, '#163a4a', 2);
     ponds.push({ x: 3, z: 75, r: 3.4, y: 0.05 });
     const lilies = []; for (let i = 0; i < 18; i++) { const a = R() * 6.28, r = rr(0.4, 3.0); lilies.push([3 + Math.cos(a) * r, 0.06, 75 + Math.sin(a) * r, rr(2, 3.2), R() * 6]); }
     scatter('lily_large', lilies.slice(0, 10), { shadow: false }); scatter('lily_small', lilies.slice(10), { shadow: false });

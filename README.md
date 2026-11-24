@@ -1,7 +1,8 @@
 # Lanka ki Chhatein
 
-A 3D stealth-action game in the browser (three.js). Night in Lanka: Hanuman, in his small form, crosses the rooftops
+A 3D stealth-action game in the browser (three.js). Sundown in Lanka: Hanuman, in his small form, crosses the rooftops
 and bazaar lanes past rakshasa guards to reach Sita Mata in Ashok Vatika and give her Rama's ring.
+See [design/art-direction.md](design/art-direction.md) for the look (golden-hour light, haze, bloom, sun shafts, lush grass).
 
 ## Play
 
@@ -23,7 +24,7 @@ Then open http://localhost:8765/lanka-ki-chhatein.html. Everything is bundled, s
 | Action | Keyboard and mouse | Touch |
 |---|---|---|
 | Move / look | W A S D / mouse | left stick / drag |
-| Sprint (noisy) | Shift | push the stick all the way |
+| Sprint (noisy, uses stamina) | Shift | push the stick all the way |
 | Jump; press again in the air for a flip | Space | Kudo |
 | Jump at a wall up to about 2.5 m tall to climb it | Space while moving | Kudo |
 | Crouch and sneak | C | |
@@ -46,6 +47,8 @@ deep (lamp) restores your health and sets the checkpoint.
 | `prototype/js/actors.js` | Loads the rigged characters; animation controller (blended loops plus one-shots) |
 | `prototype/js/fx.js` | Particles: dust, hit sparks, shockwaves, death smoke, stun stars, embers, rain, lightning |
 | `prototype/js/scenery.js` | Dense set dressing with Kenney props, wind sway, water, fountain, puddles, mist |
+| `prototype/js/look.js` | Post-processing (bloom, sun shafts, colour grade), ocean, far ridges, floating motes |
+| `prototype/js/grass.js` | Instanced, wind-blown grass |
 | `prototype/js/audio.js` | Sound: positional SFX, ambience loops, stealth/combat music, tanpura drone |
 | `prototype/assets/chars/` | `hanuman.glb` (rigged, 32 clips, gada) and `rakshasa.glb` (rigged, 21 clips, 4 weapons) |
 | `prototype/assets/env/props.glb` | 40 Kenney props in one file |
