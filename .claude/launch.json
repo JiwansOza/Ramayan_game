@@ -4,26 +4,8 @@
     {
       "name": "prototype",
       "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8765",
-        "--directory",
-        "/Users/jiwansoza/ramayan/prototype"
-      ],
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "prototype"],
       "port": 8765
-    },
-    {
-      "name": "model-viewer",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8766",
-        "--directory",
-        "/private/tmp/claude-501/-Users-jiwansoza--claude-spares-spare-iGWxDO/5fe9e753-7f50-4381-ac6f-540448324ffe/scratchpad/viewer"
-      ],
-      "port": 8766
     }
   ]
 }

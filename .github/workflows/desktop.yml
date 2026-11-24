@@ -1,0 +1,42 @@
+# Builds the Windows PC version of the game and publishes it as the "Desktop build (latest)" release.
+name: Desktop build
+
+on:
+  push:
+    branches: [main]
+    paths: ['prototype/**', 'desktop/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install packager
+        working-directory: desktop
+        run: ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci
+      - name: Package for Windows x64
+        working-directory: desktop
+        run: node build.js win32
+      - name: Zip
+        working-directory: desktop/dist
+        run: cd "Lanka ki Chhatein-win32-x64" && zip -qr ../../Lanka-ki-Chhatein-win32-x64.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lanka-ki-Chhatein-windows
+          path: desktop/Lanka-ki-Chhatein-win32-x64.zip
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete desktop-latest --yes --cleanup-tag || true
+          gh release create desktop-latest desktop/Lanka-ki-Chhatein-win32-x64.zip \
+            --title "Desktop build (latest)" \
+            --notes "Windows PC build of Lanka ki Chhatein from ${GITHUB_SHA::7}. Unzip and run LankaKiChhatein.exe." \
+            --target "$GITHUB_SHA"

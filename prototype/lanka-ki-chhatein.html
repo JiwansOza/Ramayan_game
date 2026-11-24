@@ -1,9 +1,11 @@
 <meta charset="utf-8">
 <title>Lanka ki Chhatein</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Mukta:wght@400;500;700&display=swap">
 <style>
+  /* fonts are bundled (Fontsource, SIL Open Font License) so the game runs offline */
+  @font-face { font-family: 'Rozha One'; src: url(vendor/fonts/rozha-one-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Mukta'; src: url(vendor/fonts/mukta-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Mukta'; src: url(vendor/fonts/mukta-latin-500-normal.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+  @font-face { font-family: 'Mukta'; src: url(vendor/fonts/mukta-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
   /* one full-screen game: the canvas fills the window, HUD floats over it, screens sit over both */
   :root {
     --ink: #0e0b1e; --ink-2: #1a1533; --moon: #f3e6c2; --moon-dim: rgba(243, 230, 194, 0.72);
@@ -31,13 +33,25 @@
   #sub { left: 50%; transform: translateX(-50%); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); max-width: min(640px, 86vw); text-align: center; font-size: 18px; line-height: 1.4;
          padding: 8px 16px; background: rgba(14, 11, 30, 0.55); border-radius: 4px; opacity: 0; transition: opacity 0.4s; }
   #sub.on { opacity: 1; }
-  #keys { right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); font-size: 12.5px; color: var(--moon-dim); line-height: 1.75; text-align: right; }
+  #keys { right: calc(16px + env(safe-area-inset-right, 0px)); top: calc(74px + env(safe-area-inset-top, 0px)); font-size: 12px; color: var(--moon-dim); line-height: 1.75; text-align: right; opacity: 0.8; }
+  @media (max-width: 1400px) { #wrap:not(.touch) #sub { max-width: min(560px, 46vw); } }
   kbd { display: inline-block; min-width: 14px; padding: 0 5px; margin-left: 3px; border: 1px solid var(--line); border-radius: 3px; font: 500 11.5px/1.5 var(--body); color: var(--gold); text-align: center; background: rgba(14, 11, 30, 0.5); }
   #banner { left: 0; right: 0; top: 38%; text-align: center; display: none; }
   #wrap.caught #banner { display: block; }
   #banner .big { font: 400 clamp(40px, 7vw, 72px)/1 var(--display); color: var(--danger); }
   #banner .small { margin-top: 8px; font-size: 16px; color: var(--moon); }
   #wrap.caught #c { filter: saturate(0.5) brightness(0.7); }
+  #vitals { left: calc(14px + env(safe-area-inset-left, 0px)); top: calc(80px + env(safe-area-inset-top, 0px)); width: 220px; }
+  #vitals .hpLbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--moon-dim); }
+  #vitals .form b { color: var(--gold); font-weight: 500; }
+  .hpBar { height: 9px; margin-top: 3px; border: 1px solid var(--line); border-radius: 5px; background: rgba(14, 11, 30, 0.6); overflow: hidden; }
+  #hpFill { height: 100%; width: 100%; background: linear-gradient(90deg, #e47a2e, #e9c46a); transition: width 0.15s; }
+  #hpFill.low { background: linear-gradient(90deg, #a8201a, #ef5a3c); }
+  #prompt { left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); font-size: 17px; padding: 8px 14px; background: rgba(14, 11, 30, 0.6); border: 1px solid var(--line); border-radius: 4px; opacity: 0; transition: opacity 0.3s; }
+  #prompt.on { opacity: 1; }
+  #hurt { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(170, 20, 10, 0.75) 100%); }
+  .ehb { position: absolute; left: 0; top: 0; z-index: 2; width: 60px; height: 6px; border: 1px solid rgba(0,0,0,0.6); border-radius: 3px; background: rgba(14, 11, 30, 0.7); pointer-events: none; display: none; overflow: hidden; }
+  .ehb i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #a8201a, #ef5a3c); }
 
   #pauseBtn { position: absolute; z-index: 3; right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); width: 44px; height: 44px; border-radius: 50%;
               border: 1px solid var(--line); background: rgba(14, 11, 30, 0.55); color: var(--moon); font: 500 15px/1 var(--body); cursor: pointer; display: none; }
@@ -54,20 +68,26 @@
           font: 500 14px/1 var(--body); touch-action: none; }
   .tbtn.held { background: rgba(233, 196, 106, 0.35); }
   #bJump { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
-  #bThrow { right: calc(108px + env(safe-area-inset-right, 0px)); bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  #bThrow { right: calc(196px + env(safe-area-inset-right, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+  #bAtk { right: calc(108px + env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .tbtn.sm { width: 54px; height: 54px; font-size: 12px; }
+  #bRoll { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  #bHeavy { right: calc(98px + env(safe-area-inset-right, 0px)); bottom: calc(158px + env(safe-area-inset-bottom, 0px)); }
+  #bForm { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
   #sub { bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
   #wrap:not(.touch) #sub { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+  #wrap.touch #prompt { bottom: calc(240px + env(safe-area-inset-bottom, 0px)); }
 
   /* screens */
   #screen { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: rgba(10, 8, 24, 0.78);
             padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); overflow-y: auto; }
   #wrap.playing #screen, #wrap.caught #screen { display: none; }
-  .card { width: min(560px, 100%); }
+  .card { width: min(620px, 100%); }
   .eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
   h1 { margin: 6px 0 0; font: 400 clamp(42px, 8vw, 72px)/1 var(--display); color: var(--moon); text-wrap: balance; }
   .lede { margin: 14px 0 0; font-size: 17px; color: var(--moon); max-width: 34em; }
   .note { margin: 10px 0 0; font-size: 14px; color: var(--moon-dim); }
-  .ctrl { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; font-size: 14px; }
+  .ctrl { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; font-size: 13.5px; }
   .ctrl div { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(233, 196, 106, 0.15); color: var(--moon-dim); }
   .ctrl div span:last-child { color: var(--gold); white-space: nowrap; }
   .tips { margin-top: 18px; padding: 0; list-style: none; font-size: 14px; color: var(--moon-dim); display: grid; gap: 4px; }
@@ -111,19 +131,27 @@
       <div class="lbl"><b id="susText">Shaant</b><span id="lightText">Parchhai mein</span></div>
     </div>
     <div class="hud" id="zone"><div class="name">Lanka · Bazaar ki chhatein</div><div class="goal" id="goalText">Ashok Vatika tak pahuncho</div></div>
-    <div class="hud" id="stats">Phal <b id="fruitN">5</b> &nbsp; Deep <b id="deepN">1/3</b><br><span id="timeN">0:00</span></div>
+    <div class="hud" id="stats">Phal <b id="fruitN">5</b> &nbsp; Deep <b id="deepN">1/3</b> &nbsp; Parajit <b id="killN">0</b><br><span id="timeN">0:00</span></div>
+    <div class="hud" id="vitals"><div class="hpLbl">Bal <span class="form">Roop: <b id="formN">Mushti</b> <kbd>Q</kbd></span></div><div class="hpBar"><div id="hpFill"></div></div></div>
+    <div class="hud" id="prompt"><kbd>E</kbd> Sita Mata ko Rama ki mudrika do</div>
     <div class="hud" id="sub"></div>
     <div class="hud" id="keys">
-      <div>Chalo <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Daudo <kbd>Shift</kbd> &nbsp; Kudo <kbd>Space</kbd></div>
-      <div>Phal phenko: daba kar rakho <kbd>Left click</kbd> ya <kbd>F</kbd>, chhodo &nbsp; Ruko <kbd>P</kbd></div>
+      <div>Chalo <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Daudo <kbd>Shift</kbd> &nbsp; Kudo <kbd>Space</kbd> &nbsp; Jhuko <kbd>C</kbd></div>
+      <div>Vaar <kbd>Click</kbd> &nbsp; Bhaari vaar <kbd>E</kbd> &nbsp; Lot-pot <kbd>R</kbd> &nbsp; Gada <kbd>Q</kbd></div>
+      <div>Phal phenko: <kbd>Right click</kbd> ya <kbd>F</kbd> daba kar chhodo &nbsp; Ruko <kbd>P</kbd></div>
     </div>
-    <div class="hud" id="banner"><div class="big">Pakde gaye!</div><div class="small">Aakhri deep se dobara…</div></div>
+    <div class="hud" id="banner"><div class="big">Pakde gaye!</div><div class="small">Rakshason ne gira diya. Aakhri deep se dobara…</div></div>
   </div>
 
   <button id="pauseBtn" aria-label="Ruko">II</button>
   <div id="stick" class="touch-only" aria-hidden="true"><div id="knob"></div></div>
   <button id="bThrow" class="tbtn touch-only">Phenko</button>
   <button id="bJump" class="tbtn touch-only">Kudo</button>
+  <button id="bAtk" class="tbtn touch-only">Vaar</button>
+  <button id="bRoll" class="tbtn sm touch-only">Lot</button>
+  <button id="bForm" class="tbtn sm touch-only">Gada</button>
+  <button id="bHeavy" class="tbtn sm touch-only">Bhaari</button>
+  <div id="hurt" aria-hidden="true"></div>
 
   <div id="screen" class="loading">
     <div class="card">
@@ -131,15 +159,20 @@
       <div class="eyebrow" data-on="paused">Ruke hue</div>
       <div class="eyebrow" data-on="won">Zone poora</div>
       <h1 id="title">Lanka ki Chhatein</h1>
-      <p class="lede" data-on="loading start">Raat ki Lanka. Chhote roop mein Hanuman ko chhatton ke raaste pehredaaron se bachte hue Ashok Vatika ke dwaar tak pahunchna hai.</p>
-      <p class="lede" data-on="won">Chandni mein ashok ke ped aur kamal ka taalaab. Kahin yahin Sita Mata hain. Ye prototype yahin tak hai.</p>
-      <p class="note" data-on="loading">Hanuman aur Lanka aa rahe hain… (lagbhag 3.5 MB)</p>
+      <p class="lede" data-on="loading start">Raat ki Lanka. Chhote roop mein Hanuman ko chhatton aur galiyon ke raaste, rakshason se bachte ya unse ladte hue, Ashok Vatika mein Sita Mata tak Rama ki mudrika pahunchani hai.</p>
+      <p class="lede" data-on="won">Ashok ke ped ke neeche Sita Mata ne Rama ki mudrika pehchaan li. Ye prototype yahin tak hai.</p>
+      <p class="note" data-on="loading">Hanuman, rakshas aur Lanka aa rahe hain… (lagbhag 17 MB)</p>
       <div class="ctrl keys" data-on="start paused">
         <div><span>Chalo</span><span>W A S D</span></div>
         <div><span>Dekho</span><span>Mouse</span></div>
         <div><span>Daudo (shor hota hai)</span><span>Shift</span></div>
         <div><span>Kudo</span><span>Space</span></div>
-        <div><span>Phal phenko</span><span>Left click / F daba kar chhodo</span></div>
+        <div><span>Jhuko, chupke chalo</span><span>C</span></div>
+        <div><span>Vaar (teen vaar ka combo)</span><span>Left click</span></div>
+        <div><span>Bhaari vaar / baat karo</span><span>E</span></div>
+        <div><span>Gada ya mushti</span><span>Q</span></div>
+        <div><span>Lot-pot (vaar se bacho)</span><span>R</span></div>
+        <div><span>Phal phenko</span><span>Right click / F daba kar chhodo</span></div>
         <div><span>Ruko</span><span>P / Esc</span></div>
       </div>
       <ul class="tips thumbs" data-on="start paused">
@@ -151,26 +184,32 @@
         <li><b>Mashaal ki roshni</b> mein pehredaar jaldi dekhte hain. <b>Parchhai</b> tumhari dost hai.</li>
         <li><b>Jhaadiyon</b> mein chhup jaao to koi nahi dekh sakta.</li>
         <li>Phal jahan girega, wahan ki <b>awaaz</b> sun kar pehredaar dekhne jaayenge.</li>
-        <li><b>Deep</b> chhoo kar jalao. Pakde gaye to wahin se shuru.</li>
+        <li><b>Peeche se</b> vaar karo to rakshas ek vaar mein girta hai. Saamne se ladna ho to <b>lot-pot</b> se vaar se bacho.</li>
+        <li><b>Sir par phal</b> maaro to rakshas ko chakkar aa jaate hain.</li>
+        <li><b>Deep</b> chhoo kar jalao: bal laut aata hai, aur haare to wahin se shuru.</li>
       </ul>
       <div class="stats3" data-on="won">
         <div><b id="wTime">0:00</b>Samay</div>
         <div><b id="wCaught">0</b>Baar pakde gaye</div>
-        <div><b id="wThrown">0</b>Phal phenke</div>
+        <div><b id="wThrown">0</b>Rakshas parajit</div>
       </div>
       <div class="row" data-on="start"><button class="btn main" id="begin">Shuru karo</button></div>
-      <p class="note" data-on="start won">Hanuman ka 3D model Sketchfab se liya gaya hai; creator ka naam aur license yahan jodna baaki hai. Patthar ke textures Poly Haven (CC0) se.</p>
+      <p class="note" data-on="start won">Animation: Quaternius Universal Animation Library (CC0). Rakshas: Quaternius base (CC0). Props: Kenney (CC0). Awaaz: Kenney, Meta Open Sound, alvana-audio/HoliznaCC0 (CC0). Patthar: Poly Haven (CC0).</p>
       <div class="row" data-on="paused"><button class="btn main" id="resume">Aage khelo</button><button class="btn" id="soundBtn">Awaaz: on</button><button class="btn" id="restart">Shuru se</button></div>
       <div class="row" data-on="won"><button class="btn main" id="again">Phir se khelo</button></div>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
-<script src="hanuman-rig.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="vendor/SkeletonUtils.js"></script>
+<script src="vendor/RoomEnvironment.js"></script>
 <script src="lanka-world.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/actors.js"></script>
+<script src="js/scenery.js"></script>
 <script>
 (function () {
   'use strict';
@@ -310,6 +349,7 @@
   // ---------- the city ----------
   const solids = [], colliders = [];
   function solid(minX, maxX, minZ, maxZ, bottom, top, mats, opt = {}) {
+    if (opt.invisible) { solids.push({ minX, maxX, minZ, maxZ, bottom, top, invisible: true }); return null; }
     const w = maxX - minX, d = maxZ - minZ, h = top - bottom;
     const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, opt.uv || 4);
     const m = new THREE.Mesh(geo, mats);
@@ -501,9 +541,6 @@
     scene.add(g);
   }
   [[-8, 68, 1.2], [8.5, 70, 1.3], [-7, 79, 1.4], [6, 80, 1.2], [1, 82, 1.1], [-2.5, 70.5, 0.9]].forEach((t) => tree(...t));
-  const pond = new THREE.Mesh(new THREE.CircleGeometry(3, 32), new THREE.MeshStandardMaterial({ color: '#1c2c58', roughness: 0.12, metalness: 0.7 }));
-  pond.rotation.x = -Math.PI / 2; pond.position.set(3, 0.04, 75); scene.add(pond);
-  for (let i = 0; i < 7; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.22, 6), new THREE.MeshStandardMaterial({ color: '#f2a0b8', emissive: new THREE.Color('#4a1020') })); const a = rand() * 6.28, r = rr(0.6, 2.4); l.position.set(3 + Math.cos(a) * r, 0.14, 75 + Math.sin(a) * r); scene.add(l); }
   const flies = []; for (let i = 0; i < 26; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#d7ff7a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.set(0.3, 0.3, 1); s.userData = { x: rr(-10, 10), y: rr(0.6, 3), z: rr(65, 83), p: rand() * 10 }; scene.add(s); flies.push(s); }
   const sitaGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#ffd98a', transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending }));
   sitaGlow.scale.set(5, 5, 1); sitaGlow.position.set(-2.5, 1.6, 72); scene.add(sitaGlow);
@@ -542,106 +579,97 @@
   for (let i = 0; i < 5; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), fruitMat); f.position.set(rr(-0.2, 0.2), 0.36, rr(-0.2, 0.2)); basket.add(f); }
   scene.add(basket);
 
-  // ---------- Hanuman, in his small form ----------
-  const skin = new THREE.MeshStandardMaterial({ color: '#d8692a', roughness: 0.75 });
-  const face = new THREE.MeshStandardMaterial({ color: '#efc391', roughness: 0.7 });
+
+  // ---------- Hanuman, in his small form (a simple stand-in until the rigged model arrives) ----------
+  const skin = new THREE.MeshStandardMaterial({ color: '#b9b4ae', roughness: 0.75 });
+  const face = new THREE.MeshStandardMaterial({ color: '#d9956a', roughness: 0.7 });
   const cloth = new THREE.MeshStandardMaterial({ color: '#b8262e', roughness: 0.8 });
   const hero = new THREE.Group(), body = new THREE.Group(); hero.add(body);
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 12), skin); torso.scale.set(1, 1.25, 0.9); torso.position.y = 0.55; body.add(torso);
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), face); chest.scale.set(1, 1.1, 0.5); chest.position.set(0, 0.58, 0.14); body.add(chest);
-  const dhoti = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 0.26, 12), cloth); dhoti.position.y = 0.3; body.add(dhoti);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 12), skin); head.position.y = 0.98; body.add(head);
-  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), face); muzzle.scale.set(1.1, 0.85, 0.8); muzzle.position.set(0, 0.93, 0.16); body.add(muzzle);
-  [-0.07, 0.07].forEach((x) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), new THREE.MeshBasicMaterial({ color: '#1a0c06' })); e.position.set(x, 1.02, 0.18); body.add(e); });
-  const crown = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.26, 10), M.gold); crown.position.y = 1.24; body.add(crown);
-  const band = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.03, 6, 16), M.gold); band.rotation.x = Math.PI / 2; band.position.y = 1.12; body.add(band);
-  const limbs = [];
-  [[-0.3, 0.65, 0.06], [0.3, 0.65, 0.06], [-0.12, 0.2, 0.04], [0.12, 0.2, 0.04]].forEach(([x, y, r], i) => {
-    const piv = new THREE.Group(); piv.position.set(x, y, 0);
-    const l = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.9, i < 2 ? 0.36 : 0.24, 8), skin); l.position.y = i < 2 ? -0.18 : -0.12; piv.add(l); body.add(piv); limbs.push(piv);
-  });
-  const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.35, -0.2), new THREE.Vector3(0, 0.3, -0.55), new THREE.Vector3(0, 0.6, -0.8), new THREE.Vector3(0, 1.0, -0.7), new THREE.Vector3(0, 1.15, -0.45)]);
-  const tail = new THREE.Mesh(new THREE.TubeGeometry(tailCurve, 24, 0.045, 6, false), skin); body.add(tail);
-  const gada = new THREE.Group(); gada.position.set(0.18, 0.62, -0.24); gada.rotation.set(0.3, 0, -0.5);
-  const gh = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 6), M.gold); gada.add(gh);
-  const gb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 10), M.gold); gb.position.y = 0.3; gada.add(gb); body.add(gada);
-  body.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-  scene.add(hero);
-
-  // the sculpted Hanuman (a static model from Sketchfab) given a skeleton by code: hips, spine, chest, neck, head,
-  // thigh-shin-foot on each side, upper arm-forearm-hand on each side, and seven bones down the tail (hanuman-rig.js)
-  let rig = null, env = null, throwAnim = 0;
-  try { if (THREE.RoomEnvironment) env = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture; } catch (e) { env = null; }
-  function buildRig(root) {
-    if (!window.HANUMAN_RIG) throw new Error('rig script missing');
-    let src = null; root.traverse((o) => { if (o.isMesh && !src) src = o; });
-    root.updateMatrixWorld(true);
-    const geo = src.geometry.clone(); geo.applyMatrix4(src.matrixWorld);
-    const mat = src.material; mat.metalness = Math.min(mat.metalness, 0.5); mat.envMap = env; mat.envMapIntensity = 0.4; mat.side = THREE.DoubleSide; mat.needsUpdate = true;
-    const r = window.HANUMAN_RIG.build(THREE, geo, mat);
-    r.mesh.castShadow = true; r.mesh.frustumCulled = false;
-    const s = 1.25 / 1.9, holder = new THREE.Group(); holder.scale.setScalar(s); holder.position.y = 0.951 * s; holder.add(r.mesh);
-    hero.add(holder); body.visible = false;
-    rig = { bones: r.bones, names: r.names, holder, baseY: holder.position.y, scale: s };
+  {
+    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 12), skin); torso.scale.set(1, 1.25, 0.9); torso.position.y = 0.55; body.add(torso);
+    const dhoti = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 0.26, 12), cloth); dhoti.position.y = 0.3; body.add(dhoti);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 12), skin); head.position.y = 0.98; body.add(head);
+    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), face); muzzle.scale.set(1.1, 0.85, 0.8); muzzle.position.set(0, 0.93, 0.16); body.add(muzzle);
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.26, 10), M.gold); crown.position.y = 1.24; body.add(crown);
+    body.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   }
-  function loadHanuman() {
-    return new Promise((done) => {
-      if (!THREE.GLTFLoader) { done(false); return; }
-      const timer = setTimeout(() => done(false), 25000);
-      // the model travels as base64 inside a JSON file (the host serves .json but not .glb)
-      const fail = () => { clearTimeout(timer); done(false); };
-      fetch('hanuman.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((j) => {
-        const s = atob(j.glb), bytes = new Uint8Array(s.length);
-        for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
-        new THREE.GLTFLoader().parse(bytes.buffer, '', (g) => { clearTimeout(timer); try { buildRig(g.scene); done(true); } catch (e) { console.warn(e); done(false); } }, fail);
-      }).catch(fail);
-    });
+  scene.add(hero);
+  let H = null; // the rigged Hanuman: { root, anim, gada, handR, handL, head, tailSway }
+  let env = null;
+  // a night sky to reflect: dark indigo dome, a pale moon, warm torch glows low around the horizon
+  try {
+    const es = new THREE.Scene(), sg = new THREE.SphereGeometry(50, 32, 16), cols = [];
+    const lo = new THREE.Color('#06050f'), hi = new THREE.Color('#2a2a5c'), tmp = new THREE.Color();
+    for (let i = 0; i < sg.attributes.position.count; i++) { const y = sg.attributes.position.getY(i) / 50; tmp.copy(lo).lerp(hi, Math.max(0, Math.min(1, y * 0.8 + 0.35))); cols.push(tmp.r, tmp.g, tmp.b); }
+    sg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    es.add(new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+    const blob = (c, x, y, z, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), new THREE.MeshBasicMaterial({ color: c })); m.position.set(x, y, z); es.add(m); };
+    blob('#fff3d6', -14, 18, 40, 3.2);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; blob('#ff8a3a', Math.cos(a) * 40, rr(-2, 6), Math.sin(a) * 40, 1.6); }
+    env = new THREE.PMREMGenerator(renderer).fromScene(es, 0.02).texture;
+  } catch (e) { env = null; }
+  const A = window.LankaAudio, FX = window.LankaFX, ACT = window.LankaActors, SCN = window.LankaScenery;
+  FX.init(THREE, scene, camera); FX.resize(wrap.clientHeight);
+  addEventListener('resize', () => FX.resize(wrap.clientHeight));
+  ACT.init(THREE);
+
+  async function loadHanuman() {
+    try {
+      H = await ACT.hanuman(env);
+      hero.add(H.root); body.visible = false;
+      H.gada.visible = form === 'gada';
+      return true;
+    } catch (e) { console.warn('Hanuman model', e); return false; }
   }
 
   // ---------- rakshasa guards ----------
   const RANGE = 10.5, HALF = 0.58;
   const guards = [];
-  function mkGuard(cfg) {
-    let g, legs, arms = null, tf = null;
-    if (W) { const R = W.rakshasa({ torch: cfg.torch }); g = R.group; legs = R.legs; arms = R.arms; if (R.torchMount) tf = flame(R.torchMount, 0.42); }
-    else {
-    g = new THREE.Group();
-    const dark = new THREE.MeshStandardMaterial({ color: '#3a2a4a', roughness: 0.8 });
-    const hide = new THREE.MeshStandardMaterial({ color: '#4d6a6a', roughness: 0.7 });
-    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 1.3, 10), dark); b.position.y = 0.95; g.add(b);
-    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.12, 10), M.gold); belt.position.y = 0.55; g.add(belt);
-    const hd = new THREE.Mesh(new THREE.SphereGeometry(0.27, 12, 10), hide); hd.position.y = 1.82; g.add(hd);
-    [-0.14, 0.14].forEach((x) => { const h = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.28, 6), new THREE.MeshStandardMaterial({ color: '#e8dcc0' })); h.position.set(x, 2.08, 0); h.rotation.z = x < 0 ? 0.4 : -0.4; g.add(h);
-      const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), new THREE.MeshBasicMaterial({ color: '#ff5a2a' })); e.position.set(x * 0.7, 1.86, 0.23); g.add(e); });
-    legs = [];
-    [-0.15, 0.15].forEach((x) => { const p = new THREE.Group(); p.position.set(x, 0.32, 0); const l = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.62, 6), dark); l.position.y = -0.03; p.add(l); g.add(p); legs.push(p); });
-    const spear = new THREE.Group(); spear.position.set(0.45, 1.0, 0.1);
-    const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.4, 6), M.wood); spear.add(sh);
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.3, 6), new THREE.MeshStandardMaterial({ color: '#c9c2d8', metalness: 0.8, roughness: 0.3 })); tip.position.y = 1.32; spear.add(tip); g.add(spear);
-    if (cfg.torch) { const th = new THREE.Group(); th.position.set(-0.45, 1.25, 0.25); const st = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.6, 6), M.wood); th.add(st); g.add(th); tf = flame(th, 0.3); }
+  const GUARD_CFG = [
+    { path: [[0, 0, 6], [0, 0, 28]], zone: [-2.4, 2.4, 0, 62], torch: true, weapon: 'W_Club', hp: 110 },
+    { path: [[0, 0, 58], [0, 0, 35]], zone: [-2.4, 2.4, 0, 62], torch: true, weapon: 'W_Axe', hp: 110 },
+    { path: [[-6, 5, 23.6], [-6, 5, 33.2]], zone: [-8.6, -3.4, 22.4, 33.6], weapon: 'W_Trishul', hp: 100 },
+    { path: [[4.6, 5, 27.6], [7.6, 5, 36.8]], zone: [3.4, 8.6, 26.4, 38.0], weapon: 'W_Club', hp: 100, tint: '#c8d8ff' },
+    { path: [[6.2, 5, 50.8], [6.2, 5, 61]], zone: [3.4, 8.6, 50.4, 61.6], torch: true, weapon: 'W_Axe', hp: 110 },
+    { path: [[0.4, 0, 64.6]], zone: [-2.2, 2.2, 63.6, 66.5], weapon: 'W_Trishul', yaw: 0.9, scan: true, hp: 130, scale: 1.08 },
+    { path: [[-7.5, 0, 67.5], [-7.5, 0, 80.5], [7.8, 0, 81], [8.2, 0, 68]], zone: [-11, 11, 64, 83.4], torch: true, weapon: 'W_Axe', hp: 120 },
+    { path: [[1.2, 0, 70.2]], zone: [-11, 11, 64, 83.4], weapon: 'W_Trishul', yaw: Math.PI * 1.15, scan: true, hp: 140, scale: 1.12, tint: '#ffd0e0' },
+  ];
+  const HOSTILE = { alert: 1, chase: 1, fight: 1, hurt: 1, down: 1 };
+  async function mkGuard(cfg) {
+    const g = new THREE.Group(); scene.add(g);
+    let model = null, legs = null, arms = null, tf = null;
+    try {
+      model = await ACT.rakshasa(env, { weapon: cfg.weapon, torch: cfg.torch, scale: cfg.scale, tint: cfg.tint });
+      g.add(model.root);
+      if (cfg.torch && model.fire) { tf = flame(model.fire, 0); tf.group.scale.setScalar(1.25); }
+    } catch (e) {
+      console.warn('rakshasa model', e);
+      if (W) { const R2 = W.rakshasa({ torch: cfg.torch }); g.add(R2.group); legs = R2.legs; arms = R2.arms; if (R2.torchMount) tf = flame(R2.torchMount, 0.42); }
     }
-    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     const coneMat = new THREE.MeshBasicMaterial({ color: '#ffd36b', transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide });
     const cone = new THREE.Mesh(new THREE.CircleGeometry(RANGE, 28, -Math.PI / 2 - HALF, HALF * 2), coneMat);
     cone.rotation.x = -Math.PI / 2; cone.position.y = 0.06; g.add(cone);
-    const mark = new THREE.Sprite(new THREE.SpriteMaterial({ map: qTex, depthTest: false, transparent: true })); mark.scale.set(0.7, 0.7, 1); mark.position.y = W ? 3.0 : 2.7; mark.visible = false; g.add(mark);
-    scene.add(g);
-    const gd = { cfg, g, legs, arms, cone, coneMat, mark, tf, pos: new THREE.Vector3(), yaw: 0, want: 0, state: 'patrol', idx: 0, wait: 0, look: 0, inv: new THREE.Vector3(), reach: false, sees: false, phase: rand() * 6, walk: 0, tw: new THREE.Vector3(),
-      getPos() { if (!this.tf) return null; this.tf.glow.getWorldPosition(this.tw); if (W) this.tw.y += 0.9; return this.tw; } };
-    resetGuard(gd); guards.push(gd); return gd;
+    const mark = new THREE.Sprite(new THREE.SpriteMaterial({ map: qTex, depthTest: false, transparent: true })); mark.scale.set(0.7, 0.7, 1); mark.position.y = 2.75 * (cfg.scale || 1); mark.visible = false; g.add(mark);
+    const bar = document.createElement('div'); bar.className = 'ehb'; bar.innerHTML = '<i></i>'; wrap.appendChild(bar);
+    const gd = { cfg, g, model, legs, arms, cone, coneMat, mark, tf, bar, pos: new THREE.Vector3(), yaw: 0, want: 0, state: 'patrol', idx: 0, wait: 0, look: 0, inv: new THREE.Vector3(), reach: false, sees: false,
+      phase: rand() * 6, walk: 0, tw: new THREE.Vector3(), hp: cfg.hp, maxHp: cfg.hp, dead: false, t: 0, cd: 0, atk: null, flashK: 0, seenT: 0, lastSeen: new THREE.Vector3(), stepD: 0,
+      tauntT: rr(3, 6), knock: new THREE.Vector3(), deadT: 0, spd: 0, barT: 0, h: 2.05 * (cfg.scale || 1),
+      getPos() { if (!this.tf || this.dead) return null; this.tf.glow.getWorldPosition(this.tw); return this.tw; } };
+    resetGuard(gd, true); guards.push(gd); return gd;
   }
-  function resetGuard(gd) {
+  function resetGuard(gd, revive) {
+    if (gd.dead && !revive) return;
     const p = gd.cfg.path[0]; gd.pos.set(p[0], p[1], p[2]); gd.state = 'patrol'; gd.idx = gd.cfg.path.length > 1 ? 1 : 0; gd.wait = 0.5;
     gd.yaw = gd.want = gd.cfg.yaw != null ? gd.cfg.yaw : Math.atan2(gd.cfg.path[gd.idx][0] - p[0], gd.cfg.path[gd.idx][2] - p[2]);
+    gd.hp = gd.maxHp; gd.dead = false; gd.atk = null; gd.cd = 0; gd.t = 0; gd.flashK = 0; gd.deadT = 0; gd.knock.set(0, 0, 0);
+    gd.g.visible = true; gd.cone.visible = true;
+    if (gd.model) { gd.model.dissolve(1); gd.model.flash(0); gd.model.anim.stop(0); gd.model.root.position.y = 0; }
   }
-  mkGuard({ path: [[0, 0, 6], [0, 0, 28]], zone: [-2.4, 2.4, 0, 62], torch: true });
-  mkGuard({ path: [[0, 0, 58], [0, 0, 35]], zone: [-2.4, 2.4, 0, 62], torch: true });
-  mkGuard({ path: [[-6, 5, 23.6], [-6, 5, 33.2]], zone: [-8.6, -3.4, 22.4, 33.6], torch: false });
-  mkGuard({ path: [[6.2, 5, 50.8], [6.2, 5, 61]], zone: [3.4, 8.6, 50.4, 61.6], torch: true });
-  mkGuard({ path: [[0.4, 0, 64.6]], zone: [-2, 2, 63.8, 66], torch: false, yaw: 0.9, scan: true });
 
   // ---------- light sources for exposure + the point-light pool ----------
-  const sources = () => { const s = torches.map((t) => t.world); deeps.forEach((d) => { if (d.lit) s.push(d.world); }); guards.forEach((g) => { const p = g.getPos(); if (p) s.push(p); }); return s; };
+  let extraLights = [];
+  const sources = () => { const s = torches.map((t) => t.world).concat(extraLights); deeps.forEach((d) => { if (d.lit) s.push(d.world); }); guards.forEach((g) => { const p = g.getPos(); if (p) s.push(p); }); return s; };
 
   // ---------- fruit throwing ----------
   const G = 20;
@@ -673,19 +701,25 @@
     arcGeo.setDrawRange(0, n); arcGeo.attributes.position.needsUpdate = true; arc.computeLineDistances();
     if (landed) { landRing.position.set(landed.x, landed.y + 0.05, landed.z); landRing.visible = true; } else landRing.visible = false;
   }
+  function launchFruit() {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), fruitMat); m.castShadow = true;
+    if (H) { H.handR.getWorldPosition(m.position); } else m.position.copy(player).add(new THREE.Vector3(0, 1.1, 0));
+    scene.add(m);
+    const v = throwVel(new THREE.Vector3());
+    projectiles.push({ m, v, landed: false, life: 6 });
+  }
   function doThrow() {
     if (fruits <= 0) { say('Phal khatam. Aage ek tokri mein aur milenge.', 2.5); return; }
-    fruits--; thrown++; throwAnim = 0.35;
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), fruitMat); m.castShadow = true;
-    m.position.copy(player).add(new THREE.Vector3(0, 1.1, 0)); scene.add(m);
-    projectiles.push({ m, v: throwVel(new THREE.Vector3()), landed: false, life: 6 });
-    sfx('throw');
+    if (!canAct()) return;
+    fruits--; thrown++;
+    heroYaw = yaw;
+    startAction('throw', { speed: 1.5, dur: 0.75, events: [[0.24, () => { launchFruit(); A.play('swing', { vol: 0.5, rate: 1.3 }); }]] });
   }
 
   // ---------- noise ----------
   function noise(at, radius) {
     for (const g of guards) {
-      if (g.state === 'alert') continue;
+      if (g.dead || HOSTILE[g.state] || g.state === 'stunned') continue;
       if (Math.hypot(g.pos.x - at.x, g.pos.z - at.z) > radius || Math.abs(g.pos.y - at.y) > 6.5) continue;
       g.state = 'investigate'; g.look = 3.2; g.reach = Math.abs(at.y - g.pos.y) < 1.2 && !g.cfg.scan;
       const z = g.cfg.zone; g.inv.set(Math.min(z[1], Math.max(z[0], at.x)), g.pos.y, Math.min(z[3], Math.max(z[2], at.z)));
@@ -696,19 +730,23 @@
   // ---------- game state ----------
   const player = new THREE.Vector3(), vel = new THREE.Vector3(), checkpoint = new THREE.Vector3(-6.5, 5, 3);
   let yaw = 0, pitch = 0.32, heroYaw = 0, onGround = false, coyote = 0, sus = 0, susHold = 0;
-  let fruits = 5, thrown = 0, caughtN = 0, playTime = 0, state = 'loading', caughtT = 0, aiming = false, runNoiseT = 0, hidden = false, exposure = 0, lastSay = '';
-  let gotBasket = false;
+  let fruits = 5, thrown = 0, caughtN = 0, playTime = 0, state = 'loading', caughtT = 0, aiming = false, runNoiseT = 0, hidden = false, exposure = 0;
+  let gotBasket = false, kills = 0;
+  let hp = 100, maxHp = 100, form = 'mushti', crouch = false, airJumps = 0, act = null, combo = 0, comboT = 0, attackQueued = false, iframes = 0, hurtFlash = 0, sinceCombat = 99, regenT = 0;
+  let hitStop = 0, shakeT = 0, shakeA = 0, stepD = 0, flipping = false, bigFall = 0;
   const keys = {}, stick = { x: 0, y: 0, on: false };
   let jumpQueued = false;
+  const weather = { rain: 0, target: 0, wet: 0, next: 70, thunderT: 8 };
+  const rainForced = /[?&]rain/.test(location.search);
 
   const lines = [
     { z: -99, t: 'Raat ho chuki hai. Chhote roop mein Hanuman Lanka ki chhatton par utarte hain.', d: 5 },
-    { z: 4.5, t: 'Mashaal ki roshni se bacho. Parchhai mein pehredaar der se dekhte hain.', d: 5 },
-    { z: 12, t: 'Chhatton ke beech kudo. Daudne se awaaz hoti hai, neeche gali tak jaati hai.', d: 5 },
-    { z: 22, t: 'Aage ek rakshas chhat par ghoom raha hai. Jhaadi mein chhup kar uska raasta dekho.', d: 5.5 },
-    { z: 28.5, t: 'Gali ke upar ek takhta hai. Saamne waali chhat par chalo.', d: 4.5 },
-    { z: 49, t: 'Mashaal waala pehredaar. Phal phenk kar uska dhyaan bhatkao.', d: 5 },
-    { z: 61.5, t: 'Neeche Ashok Vatika ka dwaar hai. Dwaarpaal ki nazar se bach kar kudo.', d: 5 },
+    { z: 4.5, t: 'Mashaal ki roshni se bacho. C dabao to jhuk kar chupke chaloge.', d: 5 },
+    { z: 12, t: 'Chhatton ke beech kudo; hawa mein dobara Space dabao to lambi chhalaang. Deewar ke kinaare kudo to chadh jaoge.', d: 6 },
+    { z: 22, t: 'Aage ek rakshas chhat par ghoom raha hai. Peeche se vaar karo to ek hi vaar kaafi hai.', d: 5.5 },
+    { z: 28.5, t: 'Q dabao: gada haath mein aa jaayegi. Bhaari vaar ke liye E.', d: 4.5 },
+    { z: 49, t: 'Mashaal waala pehredaar. Sir par phal maaro to chakkar kha jaayega.', d: 5 },
+    { z: 61.5, t: 'Neeche Ashok Vatika hai. Sita Mata ashok ke ped ke neeche hain; unke paas jaakar E dabao.', d: 6 },
   ];
 
   // ---------- input ----------
@@ -716,9 +754,14 @@
     if (e.repeat) return;
     keys[e.code] = true;
     if (e.code === 'Space') { jumpQueued = true; e.preventDefault(); }
-    if (e.code === 'KeyF' && state === 'play') aiming = true;
-    if ((e.code === 'KeyP' || e.code === 'Escape') && state === 'play') pause();
-    else if (e.code === 'KeyP' && state === 'paused') resume();
+    if (state !== 'play') { if (e.code === 'KeyP' && state === 'paused') resume(); return; }
+    if (e.code === 'KeyF') aiming = true;
+    if (e.code === 'KeyC' || e.code === 'ControlLeft') crouch = !crouch;
+    if (e.code === 'KeyQ') toggleForm();
+    if (e.code === 'KeyE') heavyOrInteract();
+    if (e.code === 'KeyR' || e.code === 'AltLeft') { roll(); e.preventDefault(); }
+    if (e.code === 'KeyJ') attack();
+    if (e.code === 'KeyP' || e.code === 'Escape') pause();
   });
   addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'KeyF' && aiming && state === 'play') { aiming = false; doThrow(); } });
   const testing = /[?&]test/.test(location.search);
@@ -729,10 +772,11 @@
   canvas.addEventListener('mousedown', (e) => {
     if (state !== 'play') return;
     if (!locked && !isTouch) { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (err) {} }
-    if (e.button === 0 && locked) aiming = true;
-    else drag = { x: e.clientX, y: e.clientY };
+    if (e.button === 2) aiming = true;
+    else if (e.button === 0 && locked) attack();
+    else if (!locked) drag = { x: e.clientX, y: e.clientY };
   });
-  addEventListener('mouseup', (e) => { if (e.button === 0 && aiming && locked && state === 'play') { aiming = false; doThrow(); } drag = null; });
+  addEventListener('mouseup', (e) => { if (e.button === 2 && aiming && state === 'play') { aiming = false; doThrow(); } drag = null; });
   addEventListener('mousemove', (e) => {
     if (state !== 'play') return;
     if (locked) look(e.movementX, e.movementY, 0.0024);
@@ -757,71 +801,63 @@
   canvas.addEventListener('pointermove', (e) => { const t = lookTouch[e.pointerId]; if (!t) return; look(e.clientX - t.x, e.clientY - t.y, 0.006); t.x = e.clientX; t.y = e.clientY; });
   const endLook = (e) => { delete lookTouch[e.pointerId]; };
   canvas.addEventListener('pointerup', endLook); canvas.addEventListener('pointercancel', endLook);
-  const bJump = $('bJump'), bThrow = $('bThrow');
-  bJump.addEventListener('pointerdown', (e) => { e.preventDefault(); jumpQueued = true; bJump.classList.add('held'); });
-  bJump.addEventListener('pointerup', () => bJump.classList.remove('held')); bJump.addEventListener('pointercancel', () => bJump.classList.remove('held'));
+  const tap = (id, fn) => { const b = $(id); b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (state === 'play') fn(); b.classList.add('held'); }); ['pointerup', 'pointercancel'].forEach((ev) => b.addEventListener(ev, () => b.classList.remove('held'))); };
+  tap('bJump', () => { jumpQueued = true; }); tap('bAtk', attack); tap('bRoll', roll); tap('bForm', toggleForm); tap('bHeavy', heavyOrInteract);
+  const bThrow = $('bThrow');
   bThrow.addEventListener('pointerdown', (e) => { e.preventDefault(); if (state !== 'play') return; aiming = true; bThrow.classList.add('held'); bThrow.setPointerCapture(e.pointerId); bThrow._x = e.clientX; bThrow._y = e.clientY; });
   bThrow.addEventListener('pointermove', (e) => { if (!aiming || bThrow._x == null) return; look(e.clientX - bThrow._x, e.clientY - bThrow._y, 0.006); bThrow._x = e.clientX; bThrow._y = e.clientY; });
   const endThrow = (e) => { bThrow.classList.remove('held'); bThrow._x = null; if (aiming && state === 'play') { aiming = false; if (e.type === 'pointerup') doThrow(); } };
   bThrow.addEventListener('pointerup', endThrow); bThrow.addEventListener('pointercancel', endThrow);
   ['contextmenu', 'dragstart'].forEach((ev) => wrap.addEventListener(ev, (e) => e.preventDefault()));
 
-  // ---------- sound (made in the browser, starts on the first button press) ----------
-  let ac = null, soundOn = true, drone = null;
-  function startAudio() {
-    if (ac) { ac.resume && ac.resume(); return; }
-    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
-    const master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination); ac.master = master;
-    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520; lp.connect(master);
-    const dg = ac.createGain(); dg.gain.value = 0.05; dg.connect(lp);
-    [[65.4, 'sawtooth'], [98, 'sawtooth'], [130.8, 'triangle']].forEach(([f, t]) => { const o = ac.createOscillator(); o.type = t; o.frequency.value = f; const lfo = ac.createOscillator(); lfo.frequency.value = 0.07 + Math.random() * 0.05; const lg = ac.createGain(); lg.gain.value = 1.5; lfo.connect(lg); lg.connect(o.detune); o.connect(dg); o.start(); lfo.start(); });
-    drone = dg;
+  // ---------- sound ----------
+  let soundOn = true;
+  function sfx(k, pos) {
+    if (k === 'chime') A.play('chime', { vol: 0.8 });
+    else if (k === 'sting') A.play('sting', { vol: 0.6 });
+    else if (k === 'caught') { A.play('gong', { vol: 0.9 }); A.play('sting', { vol: 0.7, rate: 0.8 }); }
+    else if (k === 'land') A.play('land', { vol: 0.6, pos });
+    else if (k === 'won') { A.play('gong', { vol: 0.8 }); A.play('chime', { vol: 0.9, delay: 0.4 }); A.play('magic', { vol: 0.6, delay: 0.2 }); }
   }
-  function tone(f, t0, dur, type, vol) { const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f, ac.currentTime + t0); g.gain.setValueAtTime(0.0001, ac.currentTime + t0); g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t0 + dur); o.connect(g); g.connect(ac.master); o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.05); }
-  function sfx(k) {
-    if (!ac || !soundOn) return;
-    if (k === 'chime') { tone(784, 0, 1.2, 'sine', 0.25); tone(1175, 0.12, 1.4, 'sine', 0.18); }
-    else if (k === 'sting') { tone(220, 0, 0.35, 'square', 0.08); tone(233, 0.12, 0.4, 'square', 0.08); }
-    else if (k === 'caught') { tone(110, 0, 0.8, 'sawtooth', 0.22); tone(82, 0.15, 1, 'sawtooth', 0.2); }
-    else if (k === 'throw') tone(520, 0, 0.12, 'triangle', 0.12);
-    else if (k === 'land') tone(160, 0, 0.18, 'triangle', 0.2);
-    else if (k === 'won') { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.15, 1.4, 'sine', 0.18)); }
-  }
-  $('soundBtn').addEventListener('click', () => { soundOn = !soundOn; $('soundBtn').textContent = 'Awaaz: ' + (soundOn ? 'on' : 'off'); if (ac) ac.master.gain.value = soundOn ? 0.5 : 0; });
+  $('soundBtn').addEventListener('click', () => { soundOn = !soundOn; $('soundBtn').textContent = 'Awaaz: ' + (soundOn ? 'on' : 'off'); A.setMuted(!soundOn); });
 
   // ---------- screens ----------
   function setScreen(name, title) { screen.className = name; if (title) $('title').textContent = title; wrap.classList.remove('playing', 'caught'); }
-  function begin() { startAudio(); resetAll(); play(); say(lines[0].t, lines[0].d); lines[0].done = true; }
+  function begin() { A.init(); A.setMusic('stealth'); resetAll(); play(); say(lines[0].t, lines[0].d); lines[0].done = true; }
   function play() {
-    state = 'play'; wrap.classList.add('playing'); wrap.classList.remove('caught'); canvas.focus();
+    state = 'play'; wrap.classList.add('playing'); wrap.classList.remove('caught'); canvas.focus(); A.muffle(false);
     if (!isTouch) { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
   }
-  function pause() { if (state !== 'play') return; state = 'paused'; aiming = false; setScreen('paused', 'Ruko'); try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {} $('resume').focus({ preventScroll: true }); }
+  function pause() { if (state !== 'play') return; state = 'paused'; aiming = false; setScreen('paused', 'Ruko'); A.muffle(true); try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {} $('resume').focus({ preventScroll: true }); }
   function resume() { if (state !== 'paused') return; play(); }
   function win() {
-    state = 'won'; aiming = false; sfx('won');
+    state = 'won'; aiming = false; sfx('won'); A.setMusic('title');
     try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
-    $('wTime').textContent = fmt(playTime); $('wCaught').textContent = caughtN; $('wThrown').textContent = thrown;
-    setScreen('won', 'Ashok Vatika aa gaye'); $('again').focus({ preventScroll: true });
+    $('wTime').textContent = fmt(playTime); $('wCaught').textContent = caughtN; $('wThrown').textContent = kills;
+    setScreen('won', 'Mudrika Sita Mata tak pahunchi'); $('again').focus({ preventScroll: true });
   }
   $('begin').addEventListener('click', begin);
   $('resume').addEventListener('click', resume);
   $('restart').addEventListener('click', begin);
   $('again').addEventListener('click', begin);
   $('pauseBtn').addEventListener('click', pause);
+  ['begin', 'resume', 'restart', 'again'].forEach((id) => $(id).addEventListener('pointerdown', () => { A.init(); }));
 
   function resetAll() {
     player.set(-5.6, 5, 3.6); checkpoint.copy(player); vel.set(0, 0, 0); yaw = 0; pitch = 0.32; heroYaw = 0;
-    sus = 0; fruits = 5; thrown = 0; caughtN = 0; playTime = 0; gotBasket = false; basket.visible = true;
+    sus = 0; fruits = 5; thrown = 0; caughtN = 0; playTime = 0; gotBasket = false; basket.visible = true; kills = 0;
+    hp = maxHp; act = null; combo = 0; crouch = false; iframes = 0; sinceCombat = 99;
     lines.forEach((l) => { l.done = false; });
     deeps.forEach((d, i) => { d.lit = i === 0; d.f.group.visible = d.lit; });
-    guards.forEach(resetGuard); clearProjectiles();
+    guards.forEach((g) => resetGuard(g, true)); clearProjectiles(); FX.clear();
+    if (H) { H.anim.stop(0); }
   }
   function clearProjectiles() { projectiles.forEach((p) => scene.remove(p.m)); projectiles.length = 0; }
-  function caught() { state = 'caught'; caughtT = 1.8; caughtN++; aiming = false; wrap.classList.add('caught'); sfx('caught'); }
+  function caught() { state = 'caught'; caughtT = 2.6; caughtN++; aiming = false; wrap.classList.add('caught'); sfx('caught'); A.setMusic('stealth'); }
   function respawn() {
-    player.copy(checkpoint); vel.set(0, 0, 0); sus = 0; fruits = Math.max(fruits, 3);
-    guards.forEach(resetGuard); clearProjectiles(); state = 'play'; wrap.classList.remove('caught');
+    player.copy(checkpoint); vel.set(0, 0, 0); sus = 0; fruits = Math.max(fruits, 3); hp = maxHp; act = null; iframes = 1.5;
+    guards.forEach((g) => resetGuard(g, false)); clearProjectiles(); state = 'play'; wrap.classList.remove('caught');
+    if (H) { H.anim.stop(0); }
   }
 
   let sayT = 0;
@@ -829,67 +865,347 @@
   const fmt = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 
   // ---------- physics ----------
-  const R = 0.3, H = 1.1;
-  function collide(p, prevY) {
+  const PR = 0.3;
+  function collide(p, prevY, h) {
     let ground = 0;
     for (const b of solids) {
-      if (p.x > b.minX - R && p.x < b.maxX + R && p.z > b.minZ - R && p.z < b.maxZ + R) {
+      if (p.x > b.minX - PR && p.x < b.maxX + PR && p.z > b.minZ - PR && p.z < b.maxZ + PR) {
         if (p.y >= b.top - 0.32 || prevY >= b.top - 0.01) { if (b.top > ground) ground = b.top; }
-        else if (p.y + H > b.bottom) {
-          const dl = p.x - (b.minX - R), dr = b.maxX + R - p.x, df = p.z - (b.minZ - R), db = b.maxZ + R - p.z, m = Math.min(dl, dr, df, db);
-          if (m === dl) p.x = b.minX - R; else if (m === dr) p.x = b.maxX + R; else if (m === df) p.z = b.minZ - R; else p.z = b.maxZ + R;
+        else if (p.y + h > b.bottom) {
+          const dl = p.x - (b.minX - PR), dr = b.maxX + PR - p.x, df = p.z - (b.minZ - PR), db = b.maxZ + PR - p.z, m = Math.min(dl, dr, df, db);
+          if (m === dl) p.x = b.minX - PR; else if (m === dr) p.x = b.maxX + PR; else if (m === df) p.z = b.minZ - PR; else p.z = b.maxZ + PR;
         }
       }
     }
     return ground;
+  }
+  function groundAt(x, z, y = 99) { let g = 0; for (const b of solids) if (x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && b.top <= y + 0.4 && b.top > g) g = b.top; return g; }
+  // a ledge in front of Hanuman he can pull himself onto
+  function ledge() {
+    const fx = Math.sin(heroYaw), fz = Math.cos(heroYaw);
+    for (const b of solids) {
+      if (b.invisible && b.top < 1) continue;
+      const rise = b.top - player.y; if (rise < 0.8 || rise > 2.7) continue;
+      const px = player.x + fx * 0.6, pz = player.z + fz * 0.6;
+      if (px > b.minX - 0.05 && px < b.maxX + 0.05 && pz > b.minZ - 0.05 && pz < b.maxZ + 0.05) {
+        const tx = Math.min(b.maxX - 0.35, Math.max(b.minX + 0.35, player.x + fx * 0.75)), tz = Math.min(b.maxZ - 0.35, Math.max(b.minZ + 0.35, player.z + fz * 0.75));
+        return new THREE.Vector3(tx, b.top, tz);
+      }
+    }
+    return null;
   }
 
   const ray = new THREE.Raycaster();
   const _e = new THREE.Vector3(), _t = new THREE.Vector3(), _d = new THREE.Vector3();
   const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
   function sees(g) {
-    _e.set(g.pos.x, g.pos.y + 1.8, g.pos.z); _t.set(player.x, player.y + 0.6, player.z);
+    if (g.dead || g.state === 'stunned' || g.state === 'down') return -1;
+    _e.set(g.pos.x, g.pos.y + g.h * 0.9, g.pos.z); _t.set(player.x, player.y + (crouch ? 0.4 : 0.65), player.z);
     _d.subVectors(_t, _e); const dist = _d.length();
-    if (dist > RANGE) return -1;
+    const range = RANGE * (crouch ? 0.75 : 1) * (FX.flashing ? 1.3 : 1);
+    if (dist > range) return -1;
     const close = Math.hypot(_d.x, _d.z) < 1.3 && Math.abs(_d.y) < 2.2;
-    if (!close && Math.abs(angDiff(Math.atan2(_d.x, _d.z), g.yaw)) > HALF) return -1;
+    if (!close && Math.abs(angDiff(Math.atan2(_d.x, _d.z), g.yaw)) > (HOSTILE[g.state] ? 1.4 : HALF)) return -1;
     ray.set(_e, _d.normalize()); ray.far = dist - 0.35;
     if (ray.intersectObjects(colliders, false).length) return -1;
     return dist;
   }
 
+  // ---------- combat: Hanuman ----------
+  const ATK = {
+    mushti: [
+      { clip: 'punch_jab', speed: 1.3, hit: 0.21, dmg: 10, range: 1.5, arc: 1.25, cancel: 0.42, lunge: 0.7, snd: 'punch' },
+      { clip: 'punch_cross', speed: 1.25, hit: 0.29, dmg: 14, range: 1.55, arc: 1.25, cancel: 0.5, lunge: 0.8, snd: 'punch' },
+      { clip: 'punch_hook', speed: 0.95, hit: 0.29, dmg: 22, range: 1.6, arc: 1.4, heavy: true, cancel: 0.45, lunge: 1.0, snd: 'punch_hard' },
+    ],
+    gada: [
+      { clip: 'gada_a', speed: 0.8, hit: 0.25, dmg: 24, range: 2.1, arc: 1.6, cancel: 0.42, lunge: 0.9, snd: 'metal', gada: true },
+      { clip: 'gada_b', speed: 0.8, hit: 0.25, dmg: 28, range: 2.1, arc: 1.7, cancel: 0.45, lunge: 0.9, snd: 'metal', gada: true },
+      { clip: 'gada_c', speed: 1.3, hit: 0.67, dmg: 40, range: 2.3, arc: 2.2, heavy: true, cancel: 1.1, lunge: 1.5, snd: 'metal', gada: true },
+    ],
+    slam: { clip: 'gada_heavy', speed: 1.15, hit: 0.84, dmg: 48, range: 2.7, arc: 3.2, heavy: true, cancel: 1.3, lunge: 0.6, snd: 'thump', gada: true, slam: true },
+    hook: { clip: 'punch_hook', speed: 0.8, hit: 0.29, dmg: 26, range: 1.6, arc: 1.4, heavy: true, cancel: 0.5, lunge: 1.2, snd: 'punch_hard' },
+  };
+  const DUR = { punch_jab: 0.88, punch_cross: 1.0, punch_hook: 0.5, gada_a: 0.46, gada_b: 0.54, gada_c: 2.0, gada_heavy: 1.54, throw: 1.33, roll: 1.5, hit_chest: 0.33, hit_head: 0.46, knockback: 0.83, death: 2.42, getup: 1.54, climb: 0.67, interact: 2.0, jump_land: 1.29, flip_start: 1.0, jump_start: 1.33 };
+  const clipDur = (n) => (H && H.anim.dur[n]) || DUR[n] || 1;
+  const canAct = () => !act || act.cancelAt != null && act.t >= act.cancelAt;
+  // every timed move goes through here, so the game logic works with or without the rigged model
+  function startAction(name, o = {}) {
+    const sp = o.speed || 1;
+    act = { name, t: 0, dur: o.dur || clipDur(o.clip || name) / sp, events: (o.events || []).map((e) => ({ t: e[0], fn: e[1] })), cancelAt: o.cancelAt, lock: o.lock !== false, move: o.move || 0, onEnd: o.onEnd, data: o.data };
+    if (H) H.anim.play(o.clip || name, { speed: sp, fade: o.fade == null ? 0.08 : o.fade, at: o.at || 0, hold: !!o.hold, out: o.out });
+    return act;
+  }
+  function nearestFoe(maxD, arcA) {
+    let best = null, bd = maxD;
+    for (const g of guards) {
+      if (g.dead) continue;
+      const dx = g.pos.x - player.x, dz = g.pos.z - player.z, d = Math.hypot(dx, dz);
+      if (d > bd || Math.abs(g.pos.y - player.y) > 1.4) continue;
+      if (Math.abs(angDiff(Math.atan2(dx, dz), heroYaw)) > arcA) continue;
+      best = g; bd = d;
+    }
+    return best;
+  }
+  function attack() {
+    if (state !== 'play' || aiming) return;
+    if (act && act.name === 'atk' && !(act.t >= act.cancelAt)) { attackQueued = true; return; }
+    if (!canAct() || !onGround) { if (!onGround && !act) airAttack(); return; }
+    const list = ATK[form]; if (comboT <= 0) combo = 0;
+    const a = list[combo % list.length]; combo = (combo + 1) % list.length; comboT = 1.1;
+    doAttack(a);
+  }
+  function heavyOrInteract() {
+    if (state !== 'play') return;
+    if (nearSita()) { meetSita(); return; }
+    if (!canAct() || !onGround) return;
+    doAttack(form === 'gada' ? ATK.slam : ATK.hook);
+  }
+  function airAttack() { // a quick downward swipe in the air
+    doAttack(form === 'gada' ? ATK.gada[1] : ATK.mushti[1]);
+  }
+  function doAttack(a) {
+    attackQueued = false;
+    // turn to face the closest rakshasa in front (or the stick direction)
+    const ix = moveDir.x, iz = moveDir.z; if (Math.hypot(ix, iz) > 0.2) heroYaw = Math.atan2(ix, iz);
+    const foe = nearestFoe(3.4, 1.6);
+    if (foe) heroYaw = Math.atan2(foe.pos.x - player.x, foe.pos.z - player.z);
+    const lungeTo = foe ? Math.max(0, Math.hypot(foe.pos.x - player.x, foe.pos.z - player.z) - (a.gada ? 1.4 : 0.95)) : a.lunge * 0.5;
+    const sp = a.speed, hitT = a.hit / sp;
+    startAction('atk', { clip: a.clip, speed: sp, cancelAt: a.cancel / sp, move: Math.min(a.lunge, lungeTo) / Math.max(0.1, hitT), data: { hitT },
+      events: [[hitT * 0.55, () => { A.play(a.gada ? 'swing_heavy' : 'swing', { vol: 0.7 }); if (Math.random() < 0.45) A.play('h_effort', { vol: 0.45, rate: 1.25 }); }], [hitT, () => strike(a)]] });
+    sinceCombat = 0;
+  }
+  const _hp = new THREE.Vector3();
+  function strike(a) {
+    let hits = 0;
+    const fx = Math.sin(heroYaw), fz = Math.cos(heroYaw);
+    for (const g of guards) {
+      if (g.dead) continue;
+      const dx = g.pos.x - player.x, dz = g.pos.z - player.z, d = Math.hypot(dx, dz);
+      if (d > a.range + 0.35 || Math.abs(g.pos.y - player.y) > 1.4) continue;
+      if (!a.slam && d > 0.4 && Math.abs(angDiff(Math.atan2(dx, dz), heroYaw)) > a.arc * 0.5) continue;
+      hits++;
+      const dir = new THREE.Vector3(dx, 0, dz).normalize();
+      hurtGuard(g, a.dmg, a.heavy, dir, a);
+    }
+    if (a.slam) {
+      _hp.set(player.x + fx * 1.0, player.y, player.z + fz * 1.0);
+      FX.landing(_hp, true); FX.ring(_hp, 3.4, '#ffcf6a', 0.75, 0.5); A.play('thump', { vol: 1 }); shake(0.35, 0.22); noise(player, 7);
+    }
+    if (hits) { hitStop = a.gada ? 0.085 : 0.05; shake(a.heavy ? 0.25 : 0.12, a.heavy ? 0.16 : 0.07); }
+  }
+  function roll() {
+    if (state !== 'play' || !onGround || (act && !canAct() && act.name !== 'atk')) return;
+    if (act && act.name === 'atk' && act.t < act.data.hitT) return;
+    const ix = moveDir.x, iz = moveDir.z;
+    if (Math.hypot(ix, iz) > 0.2) heroYaw = Math.atan2(ix, iz);
+    iframes = 0.55; crouch = false;
+    startAction('roll', { clip: 'roll', speed: 1.45, cancelAt: 0.8, move: 5.2 });
+    A.play('cloth', { vol: 0.6 });
+  }
+  function toggleForm() {
+    if (state !== 'play' || (act && !canAct())) return;
+    form = form === 'gada' ? 'mushti' : 'gada'; combo = 0;
+    if (H) H.gada.visible = form === 'gada';
+    FX.magic(player, form === 'gada' ? '#ffd27a' : '#a8d8ff'); A.play('magic', { vol: 0.55 });
+    $('formN').textContent = form === 'gada' ? 'Gada' : 'Mushti';
+  }
+
+  // ---------- combat: the rakshasas ----------
+  function engage(g, shout) {
+    if (g.dead || HOSTILE[g.state]) return;
+    g.state = shout ? 'alert' : 'chase'; g.t = 0; g.seenT = 0; g.lastSeen.copy(player); g.cd = rr(0.6, 1.4);
+    if (shout) {
+      g.yaw = g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z);
+      if (g.model) g.model.anim.play('shout', { speed: 1.4, fade: 0.15 });
+      A.play(Math.random() < 0.5 ? 'r_roar' : 'r_laugh', { vol: 1, pos: g.pos, rate: 0.85 });
+      // the shout carries
+      for (const o of guards) if (o !== g && !o.dead && !HOSTILE[o.state] && o.pos.distanceTo(g.pos) < 18) { o.state = 'chase'; o.t = 0; o.lastSeen.copy(player); o.cd = rr(1, 2); }
+    }
+    sinceCombat = 0;
+  }
+  function hurtGuard(g, dmg, heavy, dir, a) {
+    if (g.dead) return;
+    const unaware = !HOSTILE[g.state] && g.state !== 'hurt';
+    if (unaware || g.state === 'stunned') { dmg *= unaware ? 3 : 2; if (unaware) say(g.hp - dmg <= 0 ? 'Chupke se ek hi vaar. Rakshas gir gaya.' : 'Peeche se vaar!', 2); }
+    if (g.state === 'down') dmg *= 0.6;
+    g.hp -= dmg; g.flashK = 1; g.barT = 4;
+    const at = new THREE.Vector3(g.pos.x - dir.x * 0.2, g.pos.y + g.h * 0.6, g.pos.z - dir.z * 0.2);
+    FX.hit(at, dir, heavy, a && a.gada);
+    A.play(a ? a.snd : 'punch', { vol: 0.9, pos: g.pos }); if (a && a.gada) A.play('thump', { vol: 0.55, pos: g.pos });
+    if (g.hp <= 0) { killGuard(g, dir); return; }
+    A.play('r_hurt', { vol: 0.75, pos: g.pos, rate: 0.9 });
+    const wasHostile = HOSTILE[g.state];
+    g.atk = null;
+    if (heavy) {
+      g.state = 'down'; g.t = 0; g.knock.copy(dir).multiplyScalar(4.2);
+      if (g.model) g.model.anim.play('knockback', { speed: 1.0, fade: 0.05, hold: true });
+    } else {
+      g.state = 'hurt'; g.t = 0; g.knock.copy(dir).multiplyScalar(1.6);
+      if (g.model) g.model.anim.play(Math.random() < 0.5 ? 'hit_chest' : 'hit_head', { speed: 0.9, fade: 0.04 });
+    }
+    g.yaw = g.want = Math.atan2(-dir.x, -dir.z);
+    if (!wasHostile) { g.lastSeen.copy(player); for (const o of guards) if (o !== g && !o.dead && !HOSTILE[o.state] && o.pos.distanceTo(g.pos) < 12) engage(o, false); }
+  }
+  function killGuard(g, dir) {
+    g.dead = true; g.state = 'dead'; g.t = 0; g.atk = null; g.knock.copy(dir).multiplyScalar(2.5); kills++;
+    g.cone.visible = false; g.mark.visible = false; g.bar.style.display = 'none';
+    if (g.model) g.model.anim.play('death', { speed: 1.1, fade: 0.06, hold: true });
+    A.play('r_death', { vol: 1, pos: g.pos }); A.play('bodyfall', { vol: 0.8, pos: g.pos, delay: 0.8 });
+    if (g.tf) g.tf.group.visible = false;
+    say(kills === 1 ? 'Rakshas parajit! Gada ya mushti, Hanuman ka vaar khaali nahi jaata.' : 'Ek aur rakshas gira.', 2.4);
+  }
+  function hurtPlayer(dmg, heavy, from) {
+    if (iframes > 0 || state !== 'play' || act && act.name === 'dead') { if (iframes > 0 && act && act.name === 'roll') { FX.block(_hp.copy(player).setY(player.y + 0.7)); } return; }
+    hp -= dmg; hurtFlash = 1; sinceCombat = 0; iframes = 0.35;
+    const dir = new THREE.Vector3(player.x - from.pos.x, 0, player.z - from.pos.z).normalize();
+    FX.hurt(_hp.copy(player).setY(player.y + 0.75)); A.play('h_hurt', { vol: 0.75 }); A.play(heavy ? 'punch_hard' : 'punch', { vol: 0.8 }); shake(heavy ? 0.4 : 0.2, heavy ? 0.2 : 0.1);
+    heroYaw = Math.atan2(-dir.x, -dir.z);
+    if (hp <= 0) {
+      hp = 0; vel.set(dir.x * 3, 2, dir.z * 3);
+      startAction('dead', { clip: 'death', speed: 1.2, hold: true, dur: 2.4, events: [[0.7, () => A.play('bodyfall', { vol: 0.7 })]], onEnd: () => { caught(); } });
+      return;
+    }
+    if (heavy) { vel.x = dir.x * 5; vel.z = dir.z * 5; vel.y = 3; startAction('down', { clip: 'knockback', speed: 1.1, dur: 0.75, events: [], onEnd: () => startAction('getup', { clip: 'getup', speed: 1.6, dur: 0.9 }) }); }
+    else { vel.x = dir.x * 2.5; vel.z = dir.z * 2.5; startAction('hurt', { clip: Math.random() < 0.5 ? 'hit_chest' : 'hit_head', speed: 1, dur: 0.38 }); }
+  }
+
+  // ---------- Sita ----------
+  const SITA = new THREE.Vector3(-2.5, 0, 72);
+  const sitaLight = new THREE.PointLight('#ffd98a', 1.6, 9, 2); sitaLight.position.set(SITA.x, 1.4, SITA.z); scene.add(sitaLight);
+  const halo = new THREE.Mesh(new THREE.RingGeometry(0.7, 1.15, 48), new THREE.MeshBasicMaterial({ color: '#ffd98a', transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  halo.rotation.x = -Math.PI / 2; halo.position.set(SITA.x, 0.05, SITA.z); scene.add(halo);
+  let sitaT = 0;
+  const nearSita = () => Math.hypot(player.x - SITA.x, player.z - SITA.z) < 2.0 && player.y < 1;
+  function meetSita() {
+    if (guards.some((g) => !g.dead && HOSTILE[g.state])) { say('Abhi nahi: rakshas peeche pade hain. Pehle unse niptao ya chhup jaao.', 3); return; }
+    heroYaw = Math.atan2(SITA.x - player.x, SITA.z - player.z);
+    startAction('interact', { clip: 'interact', speed: 1.1, dur: 1.8, events: [[0.8, () => { FX.sparkle(_hp.copy(SITA).setY(1.1), '#ffe9a8', 60); A.play('chime', { vol: 1 }); }]], onEnd: () => win() });
+    say('Hanuman jhuk kar pranaam karte hain aur Rama ki mudrika Sita Mata ko dete hain.', 4);
+  }
+
+  function shake(amp, dur) { shakeA = Math.max(shakeA, amp); shakeT = Math.max(shakeT, dur); }
+
+  // ---------- guards: thinking and moving ----------
+  const ZPAD = 0.0;
+  const inZone = (z, x, zz, pad = 0.4) => x > z[0] - pad && x < z[1] + pad && zz > z[2] - pad && zz < z[3] + pad;
+  let attackers = 0;
   function updateGuard(g, dt) {
+    const path = g.cfg.path, zone = g.cfg.zone;
     let target = null, speed = 0;
-    const path = g.cfg.path;
+    g.t += dt; g.cd -= dt; g.flashK = Math.max(0, g.flashK - dt * 4);
+    const pd = Math.hypot(player.x - g.pos.x, player.z - g.pos.z), dy = Math.abs(player.y - g.pos.y);
+    const reach = dy < 1.3 && inZone(zone, player.x, player.z, 0.6) && !g.cfg.scanOnly;
+    if (g.state === 'dead') {
+      g.deadT += dt;
+      if (g.deadT < 0.6) moveClamped(g, g.knock.x * dt, g.knock.z * dt), g.knock.multiplyScalar(1 - dt * 4);
+      if (g.deadT > 1.3 && !g.smoked) { g.smoked = true; FX.death(_hp.copy(g.pos).setY(g.pos.y + 0.3)); }
+      if (g.deadT > 2.6 && g.model) { const k = Math.max(0, 1 - (g.deadT - 2.6) / 1.4); g.model.dissolve(k); g.model.root.position.y = -(1 - k) * 0.5; if (Math.random() < 0.3) FX.fade(_hp.copy(g.pos).setY(g.pos.y + 0.2), 2); }
+      if (g.deadT > 4.1) g.g.visible = false;
+      animGuard(g, 0, dt); return;
+    }
+    g.smoked = false;
     if (g.state === 'patrol') {
       if (g.cfg.scan) g.want = g.cfg.yaw + Math.sin(playTime * 0.55 + g.phase) * 1.15;
       else if (g.wait > 0) g.wait -= dt;
-      else { const p = path[g.idx]; _t.set(p[0], p[1], p[2]); target = _t; speed = 1.5; if (Math.hypot(g.pos.x - p[0], g.pos.z - p[2]) < 0.15) { g.idx = (g.idx + 1) % path.length; g.wait = 1.4; } }
+      else { const p = path[g.idx]; _t.set(p[0], p[1], p[2]); target = _t; speed = 1.45; if (Math.hypot(g.pos.x - p[0], g.pos.z - p[2]) < 0.15) { g.idx = (g.idx + 1) % path.length; g.wait = 1.6; } }
     } else if (g.state === 'investigate') {
-      if (g.reach && Math.hypot(g.pos.x - g.inv.x, g.pos.z - g.inv.z) > 0.3) { target = g.inv; speed = 2.4; }
+      if (g.reach && Math.hypot(g.pos.x - g.inv.x, g.pos.z - g.inv.z) > 0.3) { target = g.inv; speed = 2.3; }
       else { g.look -= dt; g.want = g.invYaw + Math.sin(playTime * 1.7) * 0.9; if (g.look <= 0) g.state = 'return'; }
     } else if (g.state === 'return') {
-      const p = path[g.cfg.scan ? 0 : g.idx]; _t.set(p[0], p[1], p[2]); target = _t; speed = 1.7;
+      const p = path[g.cfg.scan ? 0 : g.idx]; _t.set(p[0], p[1], p[2]); target = _t; speed = 1.6;
       if (Math.hypot(g.pos.x - p[0], g.pos.z - p[2]) < 0.2) { g.state = 'patrol'; g.wait = 0.8; }
+    } else if (g.state === 'stunned') {
+      if (g.t > g.stunFor) { g.state = 'investigate'; g.reach = !g.cfg.scan; g.look = 3; g.inv.copy(g.pos); g.invYaw = g.yaw; }
     } else if (g.state === 'alert') {
       g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z);
-      if (Math.abs(player.y - g.pos.y) < 1.2 && !g.cfg.scan) { const z = g.cfg.zone; _t.set(Math.min(z[1], Math.max(z[0], player.x)), g.pos.y, Math.min(z[3], Math.max(z[2], player.z))); target = _t; speed = 2.7; }
-      if (sus < 30) { g.state = 'investigate'; g.reach = false; g.look = 2.5; g.invYaw = g.want; }
+      if (g.t > 1.1) { g.state = 'chase'; g.t = 0; }
+    } else if (g.state === 'hurt') {
+      moveClamped(g, g.knock.x * dt, g.knock.z * dt); g.knock.multiplyScalar(Math.max(0, 1 - dt * 6));
+      if (g.t > 0.5) { g.state = 'chase'; g.t = 0; g.cd = Math.max(g.cd, rr(0.4, 0.9)); }
+    } else if (g.state === 'down') {
+      moveClamped(g, g.knock.x * dt, g.knock.z * dt); g.knock.multiplyScalar(Math.max(0, 1 - dt * 3.5));
+      if (g.t > 1.25 && !g.gettingUp) { g.gettingUp = true; if (g.model) g.model.anim.play('getup', { speed: 1.5, fade: 0.12 }); }
+      if (g.t > 2.3) { g.state = 'chase'; g.t = 0; g.gettingUp = false; g.cd = rr(0.5, 1.0); }
+    } else if (g.state === 'chase' || g.state === 'fight') {
+      if (g.sees || pd < 3) { g.lastSeen.copy(player); g.seenT = 0; } else g.seenT += dt;
+      if (g.seenT > 6 || act && act.name === 'dead') { g.state = 'investigate'; g.reach = true; g.look = 3.5; const z = zone; g.inv.set(Math.min(z[1], Math.max(z[0], g.lastSeen.x)), g.pos.y, Math.min(z[3], Math.max(z[2], g.lastSeen.z))); g.invYaw = g.yaw; }
+      else if (reach && pd < 2.0) {
+        g.state = 'fight'; g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z);
+        if (pd < 1.15) { target = _t.set(g.pos.x - (player.x - g.pos.x), g.pos.y, g.pos.z - (player.z - g.pos.z)); speed = 1.2; g.backing = true; }
+        if (!g.atk && g.cd <= 0 && attackers < 2 && Math.abs(angDiff(g.want, g.yaw)) < 0.5) startGuardAttack(g);
+      } else if (reach) {
+        g.state = 'chase'; _t.set(player.x, g.pos.y, player.z); target = _t; speed = 3.3;
+      } else {
+        // out of reach (on another roof or high above): wait at the edge, glare and taunt
+        g.state = 'chase';
+        _t.set(Math.min(zone[1], Math.max(zone[0], player.x)), g.pos.y, Math.min(zone[3], Math.max(zone[2], player.z))); target = _t; speed = 2.4;
+        g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z);
+        if ((g.tauntT -= dt) <= 0) { g.tauntT = rr(4, 8); A.play('r_laugh', { vol: 0.8, pos: g.pos }); }
+      }
     }
-    if (target) {
+    // an attack in progress
+    if (g.atk) {
+      const k = g.atk; k.t += dt;
+      if (k.phase === 'wind') {
+        g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z); g.flashK = Math.max(g.flashK, k.t / k.wind * 0.55);
+        if (k.t >= k.wind) { k.phase = 'swing'; k.t = 0; if (g.model) g.model.anim.play(k.clip, { speed: k.speed, fade: 0.06 }); A.play('swing_heavy', { vol: 0.7, pos: g.pos, rate: 0.85 }); if (Math.random() < 0.5) A.play('r_effort', { vol: 0.7, pos: g.pos }); }
+      } else if (k.phase === 'swing') {
+        if (!k.hit && k.t >= k.hitT) {
+          k.hit = true;
+          const dx = player.x - g.pos.x, dz = player.z - g.pos.z, d = Math.hypot(dx, dz);
+          if (d < k.range && Math.abs(player.y - g.pos.y) < 1.3 && Math.abs(angDiff(Math.atan2(dx, dz), g.yaw)) < 1.0) hurtPlayer(k.dmg, k.heavy, g);
+          else A.play('swing', { vol: 0.4, pos: g.pos, rate: 0.7 });
+        }
+        if (k.t >= k.dur) { g.atk = null; g.cd = rr(1.2, 2.6); }
+      }
+    }
+    if (target && g.state !== 'down' && g.state !== 'hurt') {
       const dx = target.x - g.pos.x, dz = target.z - g.pos.z, d = Math.hypot(dx, dz);
-      if (d > 0.05) { if (g.state !== 'alert') g.want = Math.atan2(dx, dz); const s = Math.min(d, speed * dt); g.pos.x += dx / d * s; g.pos.z += dz / d * s; g.walk += s * 4; }
-    }
-    g.yaw += angDiff(g.want, g.yaw) * Math.min(1, dt * 3.5);
+      const slow = g.atk ? 0.15 : 1;
+      if (d > 0.05) { if (!HOSTILE[g.state] && !g.backing) g.want = Math.atan2(dx, dz); const s = Math.min(d, speed * slow * dt); moveClamped(g, dx / d * s, dz / d * s); g.spd = s / dt; } else g.spd = 0;
+    } else g.spd = 0;
+    g.backing = false;
+    // keep apart from each other and from Hanuman
+    for (const o of guards) if (o !== g && !o.dead && Math.abs(o.pos.y - g.pos.y) < 1) { const dx = g.pos.x - o.pos.x, dz = g.pos.z - o.pos.z, d = Math.hypot(dx, dz); if (d < 1.1 && d > 0.001) moveClamped(g, dx / d * (1.1 - d) * 0.5, dz / d * (1.1 - d) * 0.5); }
+    if (dy < 1.2 && pd < 0.75 && pd > 0.001) { const k = (0.75 - pd); player.x += (player.x - g.pos.x) / pd * k * 0.6; player.z += (player.z - g.pos.z) / pd * k * 0.6; }
+    g.yaw += angDiff(g.want, g.yaw) * Math.min(1, dt * (HOSTILE[g.state] ? 7 : 3.5));
+    animGuard(g, g.spd, dt);
+  }
+  function moveClamped(g, dx, dz) { const z = g.cfg.zone; g.pos.x = Math.min(z[1], Math.max(z[0], g.pos.x + dx)); g.pos.z = Math.min(z[3], Math.max(z[2], g.pos.z + dz)); }
+  function startGuardAttack(g) {
+    const r = Math.random();
+    const heavy = r < 0.25;
+    const clip = heavy ? 'attack_heavy' : r < 0.6 ? 'attack_a' : 'attack_b';
+    const speed = heavy ? 0.85 : 0.62, hitAt = heavy ? 0.84 : 0.25;
+    g.atk = { phase: 'wind', t: 0, wind: heavy ? 0.6 : 0.42, clip, speed, hitT: hitAt / speed, dur: (heavy ? 1.54 : clip === 'attack_a' ? 0.46 : 0.54) / speed, dmg: heavy ? 24 : 13, heavy, range: heavy ? 2.4 : 2.1, hit: false };
+    if (g.model) g.model.anim.play('armed_idle', { speed: 1.5, fade: 0.1 });
+  }
+  function animGuard(g, spd, dt) {
     g.g.position.copy(g.pos); g.g.rotation.y = g.yaw;
-    const sw = Math.sin(g.walk) * 0.5 * (target ? 1 : 0); g.legs[0].rotation.x = sw; g.legs[1].rotation.x = -sw;
-    if (g.arms) { g.arms[0].rotation.x = -sw * 0.45 - (g.tf ? 0.5 : 0.3); g.arms[1].rotation.x = sw * 0.25 - 0.15; }
-    if (g.tf) { g.tf.group.scale.y = 1 + Math.sin(playTime * 14 + g.tf.phase) * 0.15; g.tf.glow.material.opacity = 0.75 + Math.sin(playTime * 9 + g.tf.phase) * 0.12; }
+    if (g.model) {
+      const m = g.model, an = m.anim;
+      const hostile = HOSTILE[g.state];
+      const idle = g.state === 'stunned' ? 'dizzy' : hostile ? 'armed_idle' : g.state === 'investigate' && spd < 0.1 ? 'look' : (g.cfg.scan ? 'look' : 'idle');
+      const w = Math.min(1, spd / 1.4), j = Math.max(0, Math.min(1, (spd - 1.8) / 1.2));
+      const base = {}; base[idle] = 1 - w; base.walk = w * (1 - j); base.jog = w * j;
+      an.setBase(base, { walk: Math.max(0.7, Math.min(1.6, spd / 1.45)), jog: Math.max(0.8, Math.min(1.5, spd / 3.2)), dizzy: 1, armed_idle: 1 });
+      an.update(dt);
+      m.flash(g.flashK);
+      // footsteps of a heavy rakshasa
+      g.stepD += spd * dt; if (g.stepD > (spd > 2 ? 1.3 : 1.0)) { g.stepD = 0; A.play('step_concrete', { vol: 0.55, pos: g.pos, rate: 0.7, ref: 3, max: 22 }); }
+    } else if (g.legs) {
+      g.walk += spd * dt * 4;
+      const sw = Math.sin(g.walk) * 0.5 * (spd > 0.1 ? 1 : 0); g.legs[0].rotation.x = sw; g.legs[1].rotation.x = -sw;
+      if (g.arms) { g.arms[0].rotation.x = -sw * 0.45 - (g.tf ? 0.5 : 0.3) - (g.atk && g.atk.phase === 'swing' ? 1.8 : 0); g.arms[1].rotation.x = sw * 0.25 - 0.15; }
+    }
+    if (g.tf) { g.tf.group.scale.y = 1.25 * (1 + Math.sin(playTime * 14 + g.tf.phase) * 0.15); g.tf.glow.material.opacity = 0.75 + Math.sin(playTime * 9 + g.tf.phase) * 0.12; }
   }
 
   // ---------- main update ----------
-  const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _m = new THREE.Vector3();
-  let wasAir = false, fallV = 0, susWasHigh = false;
+  const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _m = new THREE.Vector3(), moveDir = new THREE.Vector3();
+  let wasAir = false, fallV = 0, susWasHigh = false, airT = 0;
   function update(dt) {
     playTime += dt;
     // movement input relative to the camera
@@ -900,45 +1216,108 @@
     let run = !!(keys.ShiftLeft || keys.ShiftRight);
     if (stick.on !== false && (stick.x || stick.y)) { ix = stick.x; iz = stick.y; const sm = Math.hypot(ix, iz); run = sm > 0.92; }
     mag = Math.min(1, Math.hypot(ix, iz));
+    if (run && mag > 0.1) crouch = false;
     _f.set(Math.sin(yaw), 0, Math.cos(yaw)); _r.set(-Math.cos(yaw), 0, Math.sin(yaw));
-    _m.set(0, 0, 0).addScaledVector(_f, iz).addScaledVector(_r, ix);
-    const speed = aiming ? 1.6 : run ? 5.2 : 3.0;
-    const tx = _m.x * speed, tz = _m.z * speed, acc = onGround ? 14 : 5;
-    vel.x += (tx - vel.x) * Math.min(1, acc * dt); vel.z += (tz - vel.z) * Math.min(1, acc * dt);
-    if (mag > 0.1) heroYaw += angDiff(Math.atan2(_m.x, _m.z), heroYaw) * Math.min(1, dt * 12);
-    if (aiming) heroYaw += angDiff(yaw, heroYaw) * Math.min(1, dt * 12);
+    _m.set(0, 0, 0).addScaledVector(_f, iz).addScaledVector(_r, ix); moveDir.copy(_m);
+    iframes = Math.max(0, iframes - dt); comboT -= dt; sinceCombat += dt; hurtFlash = Math.max(0, hurtFlash - dt * 1.6);
 
+    // timed actions
+    let locked = false, moveK = 1;
+    if (act) {
+      act.t += dt;
+      for (const e of act.events) if (!e.done && act.t >= e.t) { e.done = true; e.fn(); }
+      if (act && act.name === 'atk' && attackQueued && act.t >= act.cancelAt) { const a = act; act = null; attack(); if (!act) act = a; }
+      if (act) {
+        locked = act.lock && !(act.cancelAt != null && act.t >= act.cancelAt && mag > 0.2 && act.name !== 'dead');
+        if (act.name === 'atk' && act.t < act.data.hitT + 0.05) { vel.x = Math.sin(heroYaw) * act.move; vel.z = Math.cos(heroYaw) * act.move; }
+        else if (act.name === 'atk') { vel.x *= 0.8; vel.z *= 0.8; }
+        if (act.name === 'roll') { const k = Math.max(0, 1 - act.t / (act.dur * 0.75)); vel.x = Math.sin(heroYaw) * act.move * k; vel.z = Math.cos(heroYaw) * act.move * k; }
+        if (act.name === 'climb') {
+          const k = Math.min(1, act.t / act.dur), d = act.data;
+          player.y = d.y0 + (d.to.y - d.y0) * Math.min(1, k / 0.6);
+          if (k > 0.45) { const h2 = (k - 0.45) / 0.55; player.x = d.x0 + (d.to.x - d.x0) * h2; player.z = d.z0 + (d.to.z - d.z0) * h2; }
+          vel.set(0, 0, 0);
+        }
+        if (act.t >= act.dur) { const e2 = act.onEnd; act = null; if (e2) e2(); }
+      }
+    }
+    const speed = aiming ? 1.6 : crouch ? 1.5 : run ? 5.0 : 2.7;
+    if (!locked) {
+      const tx = _m.x * speed, tz = _m.z * speed, acc = onGround ? 14 : 5;
+      vel.x += (tx - vel.x) * Math.min(1, acc * dt); vel.z += (tz - vel.z) * Math.min(1, acc * dt);
+      if (mag > 0.1) heroYaw += angDiff(Math.atan2(_m.x, _m.z), heroYaw) * Math.min(1, dt * 12);
+      if (aiming) heroYaw += angDiff(yaw, heroYaw) * Math.min(1, dt * 12);
+    } else if (act && (act.name === 'hurt' || act.name === 'down' || act.name === 'dead' || act.name === 'getup' || act.name === 'interact' || act.name === 'throw')) {
+      const k = Math.max(0, 1 - dt * 6); vel.x *= k; vel.z *= k;
+    }
+
+    // jumping: a second press in the air is a flip; jumping at a wall a little too tall climbs it
     coyote = onGround ? 0.12 : coyote - dt;
-    if (jumpQueued && coyote > 0) { vel.y = 7.6; coyote = 0; onGround = false; }
+    if (jumpQueued && (!act || canAct())) {
+      const lg = onGround && mag > 0.2 ? ledge() : null;
+      if (lg) {
+        act = null;
+        startAction('climb', { clip: 'climb', speed: 0.85, dur: 0.8, data: { to: lg, x0: player.x, y0: player.y, z0: player.z } });
+        A.play('cloth', { vol: 0.7 }); A.play('h_effort', { vol: 0.4, rate: 1.3 });
+      } else if (coyote > 0) {
+        vel.y = 7.6; coyote = 0; onGround = false; airJumps = 1; flipping = false; crouch = false;
+        if (H && !act) H.anim.play('jump_start', { speed: 1.6, at: 0.35, fade: 0.06, out: 0.25 });
+        A.play('cloth', { vol: 0.4 });
+      } else if (airJumps > 0 && !act) {
+        airJumps = 0; vel.y = 7.0; flipping = true;
+        if (H) H.anim.play('flip_start', { speed: 1.4, at: 0.25, fade: 0.06, out: 0.3 });
+        FX.sparkle(_hp.copy(player).setY(player.y + 0.3), '#ffe9a8', 16); A.play('swing', { vol: 0.5, rate: 0.8 });
+      }
+    }
     jumpQueued = false;
-    vel.y -= G * dt; if (vel.y < -22) vel.y = -22;
-    const prevY = player.y;
-    player.addScaledVector(vel, dt);
-    const ground = collide(player, prevY);
-    if (player.y <= ground) {
-      if (!onGround && wasAir && fallV < -9.5) { noise(player, 4.5); sfx('land'); }
-      player.y = ground; if (vel.y < 0) vel.y = 0; onGround = true;
-    } else onGround = player.y - ground < 0.03;
-    wasAir = !onGround; fallV = vel.y;
+    if (!act || act.name !== 'climb') {
+      vel.y -= G * dt; if (vel.y < -22) vel.y = -22;
+      const prevY = player.y;
+      player.addScaledVector(vel, dt);
+      const ground = collide(player, prevY, crouch ? 0.7 : 1.1);
+      if (player.y <= ground) {
+        if (!onGround && wasAir) {
+          const hard = fallV < -9.5;
+          if (hard) { noise(player, 4.5); sfx('land', player); FX.landing(player, fallV < -13); shake(0.12, 0.1); if (H && !act) H.anim.play('jump_land', { speed: 2.2, at: 0.2, fade: 0.05, out: 0.2 }); }
+          else if (fallV < -4) { A.play('land_soft', { vol: 0.45 }); FX.landing(player, false); }
+        }
+        player.y = ground; if (vel.y < 0) vel.y = 0; onGround = true; airJumps = 0; flipping = false;
+      } else onGround = player.y - ground < 0.03;
+      wasAir = !onGround; fallV = vel.y;
+    }
+    airT = onGround ? 0 : airT + dt;
     player.x = Math.max(-11.2, Math.min(11.2, player.x)); player.z = Math.max(-1.6, Math.min(83.6, player.z));
 
-    // running is loud
-    const moving = Math.hypot(vel.x, vel.z) > 0.5;
+    // footsteps, dust; running is loud
+    const hs = Math.hypot(vel.x, vel.z), moving = hs > 0.5;
+    if (onGround && moving && (!act || act.name === 'atk')) {
+      stepD += hs * dt;
+      const stride = run ? 0.95 : crouch ? 0.55 : 0.62;
+      if (stepD > stride) {
+        stepD = 0;
+        const surf = player.y < 0.2 ? (player.z > 63.5 ? 'step_grass' : 'step_concrete') : (groundAt(player.x, player.z, player.y) < 4.5 && player.y > 0.3 && player.y < 4.6 ? 'step_wood' : 'step_concrete');
+        A.play(surf, { vol: crouch ? 0.12 : run ? 0.55 : 0.32, rate: 1.15 });
+        if (run || player.y < 0.2) FX.footstep(player, run);
+      }
+    }
     runNoiseT -= dt;
-    if (run && moving && onGround && !aiming && runNoiseT <= 0) { noise(player, 5.5); runNoiseT = 0.4; }
+    if (run && moving && onGround && !aiming && !crouch && runNoiseT <= 0) { noise(player, 5.5); runNoiseT = 0.4; }
 
     // hiding, light
+    const wasHidden = hidden;
     hidden = !run && bushes.some((b) => Math.hypot(b.x - player.x, b.z - player.z) < 0.85 && Math.abs(b.y - player.y) < 0.9);
+    if (hidden && !wasHidden) { FX.leaves(player, 10); A.play('bush', { vol: 0.6 }); }
     let e = 0.2; for (const s of sources()) { const d = Math.hypot(s.x - player.x, s.y - (player.y + 0.6), s.z - player.z); if (d < 5.5) e += (1 - d / 5.5) * 0.95; }
-    exposure = hidden ? 0 : Math.min(1, e);
+    if (FX.flashing) e += 0.5;
+    exposure = hidden ? 0 : Math.min(1, e * (crouch ? 0.55 : 1) * (1 - weather.rain * 0.25));
 
-    // deep, basket, story lines, goal
+    // deep, basket, story lines
     for (const d of deeps) if (!d.lit && Math.hypot(d.x - player.x, d.z - player.z) < 1.2 && Math.abs(d.y - player.y) < 1) {
-      d.lit = true; d.f.group.visible = true; checkpoint.set(d.x, d.y, d.z + 0.8); sfx('chime'); say('Deep jal gaya. Pakde gaye to yahin se shuru karoge.', 3.5);
+      d.lit = true; d.f.group.visible = true; checkpoint.set(d.x, d.y, d.z + 0.8); sfx('chime'); FX.sparkle(d.world, '#ffd27a', 40); hp = maxHp; say('Deep jal gaya. Bal laut aaya; pakde gaye to yahin se shuru karoge.', 3.5);
     }
     if (!gotBasket && Math.hypot(basket.position.x - player.x, basket.position.z - player.z) < 1 && Math.abs(basket.position.y - player.y) < 1) { gotBasket = true; basket.visible = false; fruits += 4; sfx('chime'); say('Aam ki tokri mili. Chaar phal aur.', 3); }
     for (const l of lines) if (!l.done && player.z > l.z) { l.done = true; say(l.t, l.d); }
-    if (player.z > 65.5 && player.y < 2.5) { win(); return; }
+    $('prompt').classList.toggle('on', nearSita() && state === 'play');
 
     // aim and fruit
     if (aiming) { arc.visible = true; simulateArc(); } else { arc.visible = false; landRing.visible = false; }
@@ -946,54 +1325,104 @@
       const p = projectiles[i];
       if (!p.landed) {
         const py = p.m.position.y; p.v.y -= G * dt; p.m.position.addScaledVector(p.v, dt);
+        if (Math.random() < 0.5) FX.ember(p.m.position);
+        // a fruit on a rakshasa's head stuns him
+        let hitG = null;
+        for (const g of guards) { if (g.dead) continue; const hy = g.pos.y + g.h * 0.85; if (Math.hypot(p.m.position.x - g.pos.x, p.m.position.z - g.pos.z) < 0.55 && p.m.position.y > g.pos.y + 0.5 && p.m.position.y < hy + 0.4) { hitG = g; break; } }
+        if (hitG) {
+          FX.fruitSplat(p.m.position); A.play('fruit_hit', { vol: 0.9, pos: hitG.pos }); A.play('r_hurt', { vol: 0.7, pos: hitG.pos, rate: 1.1 });
+          scene.remove(p.m); projectiles.splice(i, 1);
+          if (!HOSTILE[hitG.state] || hitG.state === 'chase') {
+            hitG.state = 'stunned'; hitG.t = 0; hitG.stunFor = 3.6; hitG.atk = null;
+            const gg = hitG; FX.stun(() => (gg.state === 'stunned' ? _hp.set(gg.pos.x, gg.pos.y + gg.h + 0.05, gg.pos.z) : null), 3.6);
+            say('Sir par phal! Rakshas ko chakkar aa gaye; ab vaar karo.', 2.5);
+          } else { hitG.hp -= 4; hitG.flashK = 1; hitG.barT = 3; }
+          continue;
+        }
         const h = hitAt(p.m.position, py);
-        if (h !== null) { p.m.position.y = h + 0.1; p.landed = true; noise(p.m.position, 10); sfx('land'); }
+        if (h !== null) { p.m.position.y = h + 0.1; p.landed = true; noise(p.m.position, 10); A.play('fruit_hit', { vol: 0.6, pos: p.m.position }); FX.fruitSplat(p.m.position); }
       } else if ((p.life -= dt) <= 0) { scene.remove(p.m); projectiles.splice(i, 1); }
     }
 
-    // guards look
-    let rate = 0, anySees = false;
+    // guards look and act
+    let rate = 0, anySees = false, anyHostile = false;
+    attackers = guards.filter((g) => g.atk).length;
     for (const g of guards) {
+      if (state !== 'play') break;
       updateGuard(g, dt);
       const d = hidden ? -1 : sees(g);
       g.sees = d >= 0;
-      if (g.sees) {
+      if (g.sees && !HOSTILE[g.state]) {
         anySees = true;
         rate += 75 * exposure * (0.35 + 0.65 * (1 - d / RANGE));
         if (g.state === 'patrol') { g.wait = Math.max(g.wait, 0.4); g.want = Math.atan2(player.x - g.pos.x, player.z - g.pos.z); }
-        if (sus >= 50) g.state = 'alert';
+        if (sus >= 100) engage(g, true);
+        else if (sus >= 50 && g.state !== 'investigate') { noise(player, 0.1); g.state = 'investigate'; g.reach = !g.cfg.scan; g.look = 3; g.inv.set(Math.min(g.cfg.zone[1], Math.max(g.cfg.zone[0], player.x)), g.pos.y, Math.min(g.cfg.zone[3], Math.max(g.cfg.zone[2], player.z))); g.invYaw = g.want; }
       }
-      g.mark.visible = g.sees || g.state === 'investigate' || g.state === 'alert';
-      g.mark.material.map = (g.state === 'alert' || (g.sees && sus >= 55)) ? exTex : qTex;
-      const hot = g.sees ? Math.min(1, 0.3 + sus / 100) : 0;
-      g.coneMat.color.setRGB(1, 0.83 - hot * 0.55, 0.42 - hot * 0.3); g.coneMat.opacity = 0.11 + hot * 0.16;
+      if (HOSTILE[g.state]) anyHostile = true;
+      g.mark.visible = !g.dead && (g.sees || g.state === 'investigate' || HOSTILE[g.state] || g.state === 'stunned');
+      g.mark.material.map = HOSTILE[g.state] || (g.sees && sus >= 55) ? exTex : qTex;
+      const hot = g.sees ? Math.min(1, 0.3 + sus / 100) : HOSTILE[g.state] ? 1 : 0;
+      g.coneMat.color.setRGB(1, 0.83 - hot * 0.55, 0.42 - hot * 0.3); g.coneMat.opacity = g.dead ? 0 : 0.11 + hot * 0.16;
+      g.cone.visible = !g.dead && g.state !== 'stunned' && g.state !== 'down';
     }
-    if (anySees) { sus += rate * dt; susHold = 1.1; } else if ((susHold -= dt) <= 0) sus -= 16 * dt;
+    if (anySees) { sus += rate * dt; susHold = 1.1; } else if ((susHold -= dt) <= 0) sus -= (anyHostile ? 6 : 16) * dt;
     sus = Math.max(0, Math.min(100, sus));
+    if (anyHostile) sus = Math.max(sus, 60);
     if (sus > 30 && !susWasHigh) { susWasHigh = true; sfx('sting'); } if (sus < 10) susWasHigh = false;
-    if (sus >= 100) caught();
+    A.setMusic(anyHostile ? 'combat' : 'stealth');
+    if (anyHostile) sinceCombat = 0;
+    // Hanuman heals when the fighting is over
+    if (sinceCombat > 5 && hp < maxHp) hp = Math.min(maxHp, hp + dt * 6);
+  }
+
+  // ---------- weather: clear spells and rain, with lightning ----------
+  function updateWeather(dt) {
+    if (rainForced) weather.target = 1;
+    else if ((weather.next -= dt) <= 0) { const raining = weather.target > 0.1; weather.target = raining ? 0 : 0.55 + rand() * 0.45; weather.next = raining ? rr(80, 130) : rr(45, 80); }
+    weather.rain += (weather.target - weather.rain) * Math.min(1, dt * 0.08);
+    weather.wet += ((weather.rain > 0.15 ? 1 : 0) - weather.wet) * Math.min(1, dt * (weather.rain > 0.15 ? 0.05 : 0.012));
+    if (weather.rain > 0.55 && (weather.thunderT -= dt) <= 0) { weather.thunderT = rr(7, 18); FX.lightning(); A.play('thunder', { vol: 0.9, delay: rr(0.4, 1.8), vary: 0.2 }); }
+    scene.fog.density = 0.02 + weather.rain * 0.014;
+    const rough = 0.95 - weather.wet * 0.5;
+    [M.street, M.roof].forEach((m) => { m.roughness = rough; m.envMapIntensity = weather.wet * 0.9; if (env && !m.envMap) { m.envMap = env; m.needsUpdate = true; } });
+    A.setLoop('rain', weather.rain * 0.85); A.setLoop('crickets', 0.35 * (1 - weather.rain));
   }
 
   // ---------- HUD ----------
-  const ring = $('ring');
+  const ring = $('ring'), hpFill = $('hpFill'), hurtEl = $('hurt');
+  const _sp = new THREE.Vector3();
   function hud(dt) {
     ring.setAttribute('stroke-dashoffset', (157.1 * (1 - sus / 100)).toFixed(1));
     const col = sus > 66 ? '#ef5a3c' : sus > 33 ? '#e47a2e' : '#e9c46a';
     ring.setAttribute('stroke', col); $('pupil').setAttribute('fill', col);
     $('pupil').setAttribute('r', (3 + sus / 25).toFixed(1));
-    $('susText').textContent = sus > 66 ? 'Khatra!' : sus > 33 ? 'Shak' : sus > 2 ? 'Halki nazar' : 'Shaant';
-    $('lightText').textContent = hidden ? 'Jhaadi mein chhupe' : exposure > 0.6 ? 'Tez roshni mein' : exposure > 0.35 ? 'Halki roshni' : 'Parchhai mein';
-    $('fruitN').textContent = fruits; $('deepN').textContent = deeps.filter((d) => d.lit).length + '/3'; $('timeN').textContent = fmt(playTime);
-    const dist = Math.round(Math.hypot(player.x - 0, player.z - 66));
-    $('goalText').textContent = 'Ashok Vatika ' + dist + ' m';
+    const fighting = guards.some((g) => HOSTILE[g.state]);
+    $('susText').textContent = fighting ? 'Yuddh!' : sus > 66 ? 'Khatra!' : sus > 33 ? 'Shak' : sus > 2 ? 'Halki nazar' : 'Shaant';
+    $('lightText').textContent = hidden ? 'Jhaadi mein chhupe' : crouch ? (exposure > 0.35 ? 'Jhuke, roshni mein' : 'Jhuke, parchhai mein') : exposure > 0.6 ? 'Tez roshni mein' : exposure > 0.35 ? 'Halki roshni' : 'Parchhai mein';
+    hpFill.style.width = (hp / maxHp * 100).toFixed(1) + '%'; hpFill.classList.toggle('low', hp < 30);
+    hurtEl.style.opacity = (hurtFlash * 0.8 + (hp < 30 ? 0.25 + Math.sin(clock * 5) * 0.1 : 0)).toFixed(2);
+    $('fruitN').textContent = fruits; $('deepN').textContent = deeps.filter((d) => d.lit).length + '/3'; $('timeN').textContent = fmt(playTime); $('killN').textContent = kills;
+    const dist = Math.round(Math.hypot(player.x - SITA.x, player.z - SITA.z));
+    $('goalText').textContent = 'Sita Mata ' + dist + ' m';
     if (sayT > 0 && (sayT -= dt) <= 0) $('sub').classList.remove('on');
+    // health bars over rakshasas in a fight
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    for (const g of guards) {
+      g.barT -= dt;
+      const show = !g.dead && (HOSTILE[g.state] || g.barT > 0 || g.state === 'stunned') && state === 'play' && g.pos.distanceTo(player) < 16;
+      if (!show) { g.bar.style.display = 'none'; continue; }
+      _sp.set(g.pos.x, g.pos.y + g.h + 0.35, g.pos.z).project(camera);
+      if (_sp.z > 1 || Math.abs(_sp.x) > 1.1 || Math.abs(_sp.y) > 1.1) { g.bar.style.display = 'none'; continue; }
+      g.bar.style.display = 'block'; g.bar.style.transform = `translate(${((_sp.x + 1) / 2 * w - 30).toFixed(0)}px, ${((1 - _sp.y) / 2 * h).toFixed(0)}px)`;
+      g.bar.firstChild.style.width = Math.max(0, g.hp / g.maxHp * 100).toFixed(0) + '%';
+    }
   }
 
   // ---------- camera, lights, animation ----------
   const camT = new THREE.Vector3(), camP = new THREE.Vector3(), camDir = new THREE.Vector3();
-  let bob = 0;
   function frameCamera(dt) {
-    const dist = isTouch ? 4.6 : 4.2, tgtH = 1.15;
+    const dist = (isTouch ? 4.6 : 4.2) + (guards.some((g) => HOSTILE[g.state]) ? 0.6 : 0), tgtH = crouch ? 0.9 : 1.15;
     camT.set(player.x, player.y + tgtH, player.z);
     camDir.set(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
     let d = dist;
@@ -1002,113 +1431,101 @@
     camP.copy(camT).addScaledVector(camDir, d);
     if (aiming) camP.addScaledVector(_r.set(-Math.cos(yaw), 0, Math.sin(yaw)), 0.6);
     camera.position.lerp(camP, Math.min(1, dt * 14));
+    if (shakeT > 0 && !reduceMotion) { shakeT -= dt; const k = shakeA * Math.min(1, shakeT * 6); camera.position.x += (Math.random() - 0.5) * k; camera.position.y += (Math.random() - 0.5) * k; } else shakeA = 0;
     camera.lookAt(camT.x, camT.y + 0.25, camT.z);
+    const fovT = 60 + (Math.hypot(vel.x, vel.z) > 4.2 ? 5 : 0);
+    if (Math.abs(camera.fov - fovT) > 0.05) { camera.fov += (fovT - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
     moonLight.position.set(player.x + moonDir.x * 60, moonDir.y * 60, player.z + moonDir.z * 60);
     moonLight.target.position.set(player.x, 0, player.z); moonLight.target.updateMatrixWorld();
+    A.setListener(camera.position.x, camera.position.y, camera.position.z, yaw);
   }
+  let SC = null, emberT = 0;
   function animateWorld(t, dt) {
     for (const f of torches) { f.group.scale.y = 1 + Math.sin(t * 13 + f.phase) * 0.14 + Math.sin(t * 29 + f.phase) * 0.05; f.glow.material.opacity = 0.75 + Math.sin(t * 8 + f.phase) * 0.12; }
     for (const d of deeps) if (d.lit) d.f.group.scale.y = 0.7 + Math.sin(t * 12 + d.f.phase) * 0.08;
     // nearest flames get real lights
     const list = sources().slice().sort((a, b) => a.distanceToSquared(player) - b.distanceToSquared(player));
     for (let i = 0; i < pool.length; i++) { const s = list[i]; if (s) { pool[i].position.copy(s); pool[i].intensity = 1.7 + Math.sin(t * 11 + i) * 0.25; } else pool[i].intensity = 0; }
+    // embers off the nearest flames, and their crackle
+    emberT -= dt;
+    if (emberT <= 0) { emberT = 0.06; for (let i = 0; i < Math.min(4, list.length); i++) if (list[i].distanceTo(player) < 16) FX.ember(list[i]); if (SC) for (const f of SC.flames) if (f.distanceTo(player) < 14) FX.flameLick(f, 1.2); }
+    if (list[0]) A.crackle(dt, list[0].distanceTo(player));
     for (const s of flies) { const u = s.userData; s.position.set(u.x + Math.sin(t * 0.7 + u.p) * 0.8, u.y + Math.sin(t * 1.3 + u.p) * 0.4, u.z + Math.cos(t * 0.6 + u.p) * 0.8); s.material.opacity = 0.4 + 0.5 * Math.max(0, Math.sin(t * 2.2 + u.p * 3)); }
     sitaGlow.material.opacity = 0.45 + Math.sin(t * 1.4) * 0.15;
+    sitaLight.intensity = 1.4 + Math.sin(t * 1.4) * 0.3; halo.material.opacity = 0.25 + Math.sin(t * 1.4) * 0.1; halo.rotation.z = t * 0.2;
+    if ((sitaT -= dt) <= 0 && player.distanceTo(SITA) < 30) { sitaT = 0.35; FX.sparkle(_hp.set(SITA.x + rr(-0.5, 0.5), 0.3, SITA.z + rr(-0.5, 0.5)), Math.random() < 0.5 ? '#ffe9a8' : '#ffb0c8', 3); }
     if (W) W.update(t, dt);
+    if (SC) {
+      SC.update(t, dt, weather);
+      let wd = 99; for (const p of SC.ponds) wd = Math.min(wd, Math.hypot(p.x - player.x, p.z - player.z) - p.r);
+      A.setLoop('water', Math.max(0, 1 - wd / 9) * 0.5);
+      for (const p of SC.ponds) if (p.fountain && Math.random() < dt * 8 && Math.hypot(p.x - player.x, p.z - player.z) < 30) FX.splash({ x: p.x + (Math.random() - 0.5) * 0.6, y: p.y + 0.9, z: p.z + (Math.random() - 0.5) * 0.6 }, 3);
+      if (Math.random() < dt * 1.5) FX.mist({ x: rr(-10, 10), y: 0.1, z: rr(64, 83) }, 0.5);
+    }
+    FX.updateRain(dt, player, weather.rain, (x, z) => groundAt(x, z), 1.5 + weather.rain * 2);
+    FX.update(dt, t);
     // the hero
     hero.position.copy(player); hero.rotation.y = heroYaw;
     const spd = Math.hypot(vel.x, vel.z);
-    if (onGround && spd > 0.3) bob += dt * spd * (rig ? 4.6 : 3.2);
-    const sw = onGround ? Math.sin(bob) * Math.min(1, spd / 3) * 0.8 : 0.5;
-    if (rig) animateRig(t, dt, spd);
-    else {
-      limbs[0].rotation.x = sw; limbs[1].rotation.x = -sw; limbs[2].rotation.x = -sw; limbs[3].rotation.x = sw;
-      if (aiming) limbs[1].rotation.x = -2.4;
-      body.position.y = onGround && !reduceMotion ? Math.abs(Math.sin(bob)) * 0.05 : 0;
-      body.scale.setScalar(hidden ? 0.92 : 1);
-      tail.rotation.z = Math.sin(t * 2.2) * 0.15;
-    }
+    if (H) animateHero(t, dt, spd);
+    else { body.position.y = onGround && !reduceMotion ? Math.abs(Math.sin(t * spd * 2)) * 0.05 : 0; body.scale.setScalar(hidden || crouch ? 0.85 : 1); }
   }
-
-  // ---------- Hanuman's moves (rotations are relative to the sculpt's own standing pose) ----------
-  // (a negative x turn swings a limb forward; a positive x turn bends a knee back)
-  const target = {}, _fp = new THREE.Vector3();
-  function animateRig(t, dt, spd) {
-    const B = rig.bones, T = target;
-    for (const n of rig.names) T[n] = [0, 0, 0];
-    const walk = onGround ? Math.min(1, spd / 3) : 0, run = onGround ? Math.min(1, Math.max(0, (spd - 3) / 2.2)) : 0;
-    const s = Math.sin(bob), c = Math.cos(bob);
-    // standing: breathing, a slow look around, the tail always alive
-    T.chest = [Math.sin(t * 2.2) * 0.025, s * 0.12 * walk, 0];
-    T.head = [-(0.06 * walk + 0.15 * run) * 0.7, Math.sin(t * 0.45) * 0.18 * (1 - walk), 0];
-    for (let i = 0; i <= 6; i++) T['tail' + i] = [Math.sin(t * 1.3 - i * 0.6) * 0.05 + (onGround ? 0 : 0.08), 0, Math.sin(t * 2.0 - i * 0.7) * (0.05 + 0.07 * run)];
-    if (onGround) {
-      // walk and run: thighs swing, the knee bends as the leg comes through, arms swing against the legs, the body leans in
-      const swing = (0.42 + 0.25 * run) * walk, knee = (0.45 + 0.7 * run) * walk;
-      T.thighR = [-s * swing, 0, 0]; T.thighL = [s * swing, 0, 0];
-      T.shinR = [0.08 * walk + knee * Math.max(0, c), 0, 0]; T.shinL = [0.08 * walk + knee * Math.max(0, -c), 0, 0];
-      T.footR = [-T.shinR[0] * 0.45 + s * swing * 0.3, 0, 0]; T.footL = [-T.shinL[0] * 0.45 - s * swing * 0.3, 0, 0];
-      const arm = (0.32 + 0.3 * run) * walk;
-      T.upperArmR = [-s * arm * 0.8, 0, 0]; T.upperArmL = [s * arm, 0, 0];
-      T.foreArmR = [-(0.1 + 0.4 * run) * walk, 0, 0]; T.foreArmL = [-(0.15 + 0.6 * run) * walk, 0, 0];
-      T.spine = [0.05 * walk + 0.16 * run, 0, 0]; T.hips = [0, -s * 0.07 * walk, 0];
+  // the looping layer under every move: idle, walk, jog and sprint blended by speed, crouching, in the air
+  function animateHero(t, dt, spd) {
+    const an = H.anim, base = {};
+    if (!onGround && airT > 0.08) { base[flipping ? 'flip_loop' : 'jump_loop'] = 1; }
+    else if (crouch || hidden) {
+      const w = Math.min(1, spd / 0.8); base.crouch_idle = 1 - w; base.crouch_walk = w;
     } else {
-      // in the air: knees up, arms out for balance
-      const rising = vel.y > 0;
-      T.thighR = [-0.95, 0, 0]; T.shinR = [1.35, 0, 0]; T.footR = [-0.35, 0, 0];
-      T.thighL = [-0.35, 0, 0]; T.shinL = [0.9, 0, 0]; T.footL = [-0.3, 0, 0];
-      T.upperArmL = [-1.1, 0, 0.4]; T.foreArmL = [-0.6, 0, 0]; T.upperArmR = [-0.45, 0, -0.25]; T.foreArmR = [-0.35, 0, 0];
-      T.spine = [rising ? 0.14 : -0.04, 0, 0];
+      const idle = form === 'gada' && sinceCombat < 6 ? 'gada_idle' : 'idle';
+      const w = Math.min(1, spd / 0.9), j = Math.max(0, Math.min(1, (spd - 1.6) / 1.4)), s = Math.max(0, Math.min(1, (spd - 3.6) / 1.2));
+      base[idle] = 1 - w; base.walk = w * (1 - j); base.jog = w * j * (1 - s); base.sprint = w * j * s;
     }
-    if (hidden) {
-      // tucked low in the bush
-      T.thighR = [-1.0, 0, 0]; T.shinR = [1.7, 0, 0]; T.footR = [-0.7, 0, 0];
-      T.thighL = [-1.0, 0, 0]; T.shinL = [1.7, 0, 0]; T.footL = [-0.7, 0, 0];
-      T.spine = [0.42, 0, 0]; T.head = [-0.35, 0, 0]; T.upperArmR = [-0.3, 0, 0]; T.upperArmL = [-0.3, 0, 0];
-    }
-    // on the ground: the standing stance underneath every move, so both soles lie flat (the sculpt stands on its toes)
-    if (onGround) { const S = window.HANUMAN_RIG.stance, k = hidden ? 0.35 : 1; for (const f in S) T[f][0] += S[f] * k; }
-    if (aiming) { T.upperArmL = [-1.95, 0, 0.25]; T.foreArmL = [-0.95, 0, 0]; T.chest = [T.chest[0], -0.2, 0]; }
-    if (throwAnim > 0) {
-      const p = 1 - throwAnim / 0.35, e = p * p * (3 - 2 * p);
-      T.upperArmL = [-1.95 + e * 1.35, 0, 0.25 - e * 0.2]; T.foreArmL = [-0.95 + e * 0.85, 0, 0]; T.chest = [T.chest[0] + e * 0.1, -0.2 + e * 0.35, 0];
-      throwAnim = Math.max(0, throwAnim - dt);
-    }
-    // ease every bone towards its pose (snappier in the air and when throwing)
-    const ease = Math.min(1, dt * (throwAnim > 0 ? 22 : onGround ? 13 : 9));
-    for (const n of rig.names) { const r = B[n].rotation, v = T[n]; r.x += (v[0] - r.x) * ease; r.y += (v[1] - r.y) * ease; r.z += (v[2] - r.z) * ease; }
-    // keep the feet on the ground: measure the lowest sole and move the whole body so it rests on the floor
-    rig.holder.position.y = rig.baseY;
-    if (onGround) {
-      hero.updateMatrixWorld(true);
-      let low = Infinity;
-      for (const [b, off] of window.HANUMAN_RIG.soles) { _fp.set(off[0], off[1], off[2]); B[b].localToWorld(_fp); if (_fp.y < low) low = _fp.y; }
-      if (low < Infinity) { rig.lift = (rig.lift == null ? 0 : rig.lift) + ((player.y - low) - (rig.lift || 0)) * Math.min(1, dt * 20) + 0; rig.holder.position.y = rig.baseY + rig.lift + 0.01; }
-    } else rig.lift = 0;
+    an.setBase(base, { walk: Math.max(0.8, Math.min(1.6, spd / 1.7)), jog: Math.max(0.8, Math.min(1.5, spd / 2.6)), sprint: Math.max(0.8, Math.min(1.35, spd / 4.6)), crouch_walk: Math.max(0.7, Math.min(1.6, spd / 1.1)) });
+    // hit-stop freezes the pose for a moment on a solid hit
+    an.update(hitStop > 0 ? dt * 0.08 : dt);
+    H.tailSway(t, Math.min(1, spd / 5), onGround ? 0 : 1, act && act.name === 'atk' ? Math.sin(act.t * 12) * 0.3 : 0);
   }
 
   // ---------- loop ----------
   let last = performance.now(), clock = 0;
-  function loop(now) {
-    requestAnimationFrame(loop);
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
-    if (state === 'play') update(dt);
+  function tick(dt) {
+    clock += dt;
+    let gdt = dt;
+    if (hitStop > 0) { hitStop -= dt; gdt = dt * 0.08; }
+    if (state === 'play') { update(gdt); updateWeather(dt); }
     else if (state === 'caught') { if ((caughtT -= dt) <= 0) respawn(); }
-    animateWorld(clock, dt);
+    else updateWeather(dt);
+    animateWorld(clock, gdt);
     frameCamera(dt);
     hud(dt);
+  }
+  function loop(now) {
+    requestAnimationFrame(loop);
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    tick(dt);
     renderer.render(scene, camera);
   }
   // test hook (only with ?test in the address): advance the game by hand when the tab is throttled
-  if (/[?&]test/.test(location.search)) window.__game = {
-    keys, get state() { return state; }, get player() { return player; }, get rig() { return rig; }, THREE, get sus() { return sus; }, set yaw(v) { yaw = v; }, jump() { jumpQueued = true; },
-    step(n) { for (let i = 0; i < n; i++) { const dt = 1 / 60; clock += dt; if (state === 'play') update(dt); else if (state === 'caught') { if ((caughtT -= dt) <= 0) respawn(); } animateWorld(clock, dt); frameCamera(dt); hud(dt); } renderer.render(scene, camera); return { state, x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), sus: Math.round(sus) }; },
+  if (testing) window.__game = {
+    keys, get state() { return state; }, get player() { return player; }, get H() { return H; }, THREE, get sus() { return sus; }, set yaw(v) { yaw = v; }, set pitch(v) { pitch = v; }, jump() { jumpQueued = true; },
+    get guards() { return guards; }, get hp() { return hp; }, set hp(v) { hp = v; }, get act() { return act; }, attack, heavy: heavyOrInteract, roll, toggleForm, get form() { return form; }, get weather() { return weather; }, camera, scene, set heroYaw(v) { heroYaw = v; },
+    step(n) { for (let i = 0; i < n; i++) tick(1 / 60); renderer.render(scene, camera); return { state, x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), sus: Math.round(sus), hp: Math.round(hp) }; },
+    begin,
   };
   resetAll();
   camera.position.set(-6.5, 7, -1.5);
   requestAnimationFrame(loop);
-  Promise.all([loadHanuman(), loadStone()]).then(([ok]) => {
+  const note = document.querySelector('[data-on="loading"].note');
+  let loaded = 0; const prog = (p) => p.then((v) => { loaded++; note.textContent = 'Hanuman, rakshas aur Lanka aa rahe hain… (' + loaded + '/4)'; return v; });
+  Promise.all([
+    prog(loadHanuman()),
+    prog(Promise.all(GUARD_CFG.map(mkGuard))),
+    prog(ACT.loadProps().then((props) => { SC = SCN.build({ THREE, scene, props, solid, M, rand, rr, env, isTouch }); extraLights = SC.lights; }).catch((e) => console.warn('props', e))),
+    prog(loadStone()),
+  ]).then(([ok]) => {
     if (!ok) console.log('Hanuman ka model nahi aaya; saada roop chalega.');
+    resetAll();
     setScreen('start'); $('begin').focus({ preventScroll: true });
   });
 })();
