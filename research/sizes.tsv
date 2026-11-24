@@ -1,0 +1,17 @@
+Build/fires10.loader.js	HTTP/2 200 		text/javascript; charset=utf-8		W/"07746606c7087c33ed69ad571e7c1c63"	public, max-age=14400, must-revalidate
+Build/fires10.framework.js.br	HTTP/2 200 		application/javascript		W/"bc70d5326c0ae5dcfde2c8e821644e02"	public, max-age=31536000, immutable
+Build/fires10.wasm.br	HTTP/2 200 		application/wasm		W/"887539a7d041a5ade7dfe4d82e3ae93f"	public, max-age=31536000, immutable
+Build/fires10.data.br	HTTP/2 404 					no-store
+Build/fires10.0.data.br	HTTP/2 200 		application/octet-stream		W/"4d420e1a49f2afab8867431542bebe57"	public, max-age=31536000, immutable
+Build/fires10.1.data.br	HTTP/2 200 		application/octet-stream		W/"0f9e3bff16d72ae97f17a40e49fab16e"	public, max-age=31536000, immutable
+StreamingAssets/	HTTP/2 404 					no-store
+stream/music-forest.m4a	HTTP/2 200 		audio/x-m4a		"19c8d9f4fffed42d809f52d968fdeddf"	public, max-age=0, must-revalidate
+start.webp	HTTP/2 200 	272042	image/webp		"0a02a70ccf34d70d8f8321090629fd2e"	public, max-age=14400, must-revalidate
+end.webp	HTTP/2 200 	280022	image/webp		"a9a1d902eead2919bd98bb6991ca626e"	public, max-age=14400, must-revalidate
+card.jpg	HTTP/2 200 	133632	image/jpeg		"2380685849ab2c6ec7039fd6f419fee0"	public, max-age=14400, must-revalidate
+icon.png	HTTP/2 200 	26687	image/png		"904b915c6ae0afc46dbd8708bd10799f"	public, max-age=14400, must-revalidate
+check.avif	HTTP/2 200 	326	image/avif		"a9674c331d006d8cb6b2860f01923d84"	public, max-age=14400, must-revalidate
+fonts/FacultyGlyphic-Regular.woff2	HTTP/2 200 	17880			"4292699a43ff4e444c08a725fa7df449"	public, max-age=14400, must-revalidate
+fonts/InstrumentSans-Regular.woff2	HTTP/2 200 	25628			"4612d1a47dde770f67f1877367822a46"	public, max-age=14400, must-revalidate
+fonts/InstrumentSans-Medium.woff2	HTTP/2 200 	26308			"4d2743a484ced91e30f1127037baee74"	public, max-age=14400, must-revalidate
+https://static.cloudflareinsights.com/beacon.min.js	HTTP/2 200 	31853	text/javascript;charset=UTF-8		W/"2026.10.1"	public, max-age=86400
