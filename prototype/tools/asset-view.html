@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>asset view</title>
+<!-- Shows every jungle model side by side, for checking how they came out of the shrinking step. -->
+<style>html,body{margin:0;height:100%;background:#1a2a22}canvas{display:block;width:100%;height:100%}</style>
+<canvas id="c"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const names = ['island_tree_02', 'pachira_aquatica_01', 'dead_tree_trunk_02', 'tree_stump_01', 'rock_moss_set_01', 'fern_02', 'calathea_orbifolia_01'];
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true }); r.outputEncoding = THREE.sRGBEncoding;
+const s = new THREE.Scene(); s.background = new THREE.Color('#9fb7c8');
+s.add(new THREE.HemisphereLight('#ffffff', '#445533', 1.1)); const d = new THREE.DirectionalLight('#fff', 1.2); d.position.set(3, 6, 4); s.add(d);
+const cam = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.05, 200); r.setSize(innerWidth, innerHeight, false);
+window.info = {}; let x = 0; const L = new THREE.GLTFLoader();
+Promise.all(names.map((n) => new Promise((res) => fetch('../jungle.json').then((r) => r.json()).then((j) => { const s = atob(j.models[n]), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); L.parse(u.buffer, '', (g) => res([n, g.scene]), () => res([n, null])); }).catch(() => res([n, null])))))
+  .then((list) => { for (const [n, o] of list) { if (!o) { info[n] = 'failed'; continue; } const b = new THREE.Box3().setFromObject(o), sz = b.getSize(new THREE.Vector3()); info[n] = sz.toArray().map((v) => +v.toFixed(2)); const w = Math.max(sz.x, 1); o.position.x = x + w / 2 - (b.min.x + sz.x / 2); x += w + 0.4; s.add(o); }
+    window.total = x; window.done = true; });
+window.view = (cx, dist, h) => { cam.position.set(cx, h, dist); cam.lookAt(cx, h * 0.6, 0); r.render(s, cam); };
+</script>
